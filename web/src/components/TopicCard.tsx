@@ -17,12 +17,12 @@ export function TopicCard({ topic }: { topic: TopicSummary }) {
         {topic.type === "issue" ? (
           <>
             <span>경험자 {c.experienced}명</span>
-            <span>개선 지지 {c.needs_improvement}명</span>
+            <span>개선 공감 {c.needs_improvement}명</span>
           </>
         ) : (
           <span>제안 지지 {c.want}명</span>
         )}
-        <span className="muted">최근 Report {timeAgo(topic.last_report_at)}</span>
+        <span className="muted recent">최근 Report {timeAgo(topic.last_report_at)}</span>
       </div>
     </Link>
   );

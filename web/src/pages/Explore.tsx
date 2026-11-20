@@ -149,11 +149,9 @@ export function Explore() {
         <button className={view === "list" ? "on" : ""} onClick={() => update({ view: "list" })}>
           목록
         </button>
-        {/* Report 작성 버튼 (REQ-UI-03). 선택한 건물이 있으면 장소로 미리 채운다. */}
-        <Link className="write-btn" to={selectedBuilding ? `/write?b=${selectedBuilding}` : "/write"}>
-          ✏️ 글쓰기
-        </Link>
       </nav>
+      {/* Report 작성 버튼 (REQ-UI-03). 선택한 건물이 있으면 장소로 미리 채운다. */}
+      <WriteFab to={selectedBuilding ? `/write?b=${selectedBuilding}` : "/write"} />
     </div>
   );
 }
@@ -300,5 +298,32 @@ function EmptyPlace({ building }: { building: Building | null }) {
         ✏️ 글쓰기
       </Link>
     </div>
+  );
+}
+
+/** 오른쪽 아래 글쓰기 버튼. 스크롤하는 동안 아래로 숨고, 멈추면 다시 올라온다. */
+function WriteFab({ to }: { to: string }) {
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onScroll = () => {
+      setHidden(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setHidden(false), 300);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      clearTimeout(timer);
+    };
+  }, []);
+  return (
+    <Link to={to} className={`fab-write ${hidden ? "hidden" : ""}`} aria-label="글쓰기" title="글쓰기">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"
+        strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M12 20h9" />
+        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+      </svg>
+    </Link>
   );
 }

@@ -142,7 +142,7 @@ export function WritePage() {
   return (
     <div className="app-shell write">
       <Header />
-      <div className="detail-nav">
+      <div className="detail-nav divider">
         <button className="link-btn" onClick={() => navigate(-1)}>
           ← 취소
         </button>
@@ -172,7 +172,6 @@ export function WritePage() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="비우면 내용 첫 줄"
             maxLength={100}
           />
           {errors.title && <div className="field-error">{errors.title}</div>}
@@ -310,7 +309,7 @@ function SimilarPanel({
               <div className="similar-title">{t.title}</div>
               <div className="muted small">{placeLabel(t)}</div>
               <div className="small">
-                경험자 {t.counts.experienced}명 · 개선 지지 {t.counts.needs_improvement}명 · 연결된 Report {t.report_count}건
+                경험자 {t.counts.experienced}명 · 개선 공감 {t.counts.needs_improvement}명 · 연결된 Report {t.report_count}건
               </div>
               <div className="muted small">일치: {c.matched.join(", ")}</div>
               <button

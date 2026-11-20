@@ -148,7 +148,7 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
               />
               <JoinButton
                 label="개선이 필요해요"
-                count={`개선 지지 ${c.needs_improvement}명`}
+                count={`개선 공감 ${c.needs_improvement}명`}
                 on={topic.my_participations.includes("needs_improvement")}
                 busy={pending === "needs_improvement"}
                 onClick={() => toggle("needs_improvement")}
