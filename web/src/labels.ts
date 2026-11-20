@@ -6,29 +6,10 @@ export const TYPE_LABEL: Record<TopicType, string> = {
   proposal: "Proposal",
 };
 
-export const TYPE_HINT: Record<TopicType, string> = {
-  issue: "현재 겪는 문제",
-  proposal: "원하는 변화",
-};
-
-// 한국어 설정에서는 영문 명칭을 괄호로 병기한다 (REQ-UI-07)
 export const STATUS_LABEL: Record<Status, string> = {
-  backlog: "검토 대기 (Backlog)",
-  in_progress: "진행 중 (In Progress)",
-  done: "결과 공개 (Done)",
-};
-
-export const STATUS_SHORT: Record<Status, string> = {
-  backlog: "Backlog",
-  in_progress: "In Progress",
-  done: "Done",
-};
-
-// BR-10 의 의미 안내
-export const STATUS_MEANING: Record<Status, string> = {
-  backlog: "의견을 모으고 검토를 기다리는 상태예요.",
-  in_progress: "담당 조직이 검토하거나 조치하고 있어요.",
-  done: "처리 결과와 사유가 공개된 상태예요. 항상 수리 완료를 뜻하지는 않아요.",
+  backlog: "검토 대기",
+  in_progress: "진행 중",
+  done: "완료됨",
 };
 
 export const DELIVERY_LABEL: Record<DeliveryStatus, string> = {

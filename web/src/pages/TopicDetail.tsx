@@ -15,8 +15,6 @@ import {
   RESULT_LABEL,
   ROLE_LABEL,
   STATUS_LABEL,
-  STATUS_MEANING,
-  TYPE_HINT,
   TYPE_LABEL,
   formatDateTime,
   placeLabel,
@@ -60,11 +58,7 @@ export function TopicDetailPage() {
       {topic && registered && (
         // Report 등록 결과와 의제 연결 결과를 구분해 보여준다 (REQ-UI-21)
         <div className="banner ok" role="status">
-          <strong>Report를 등록했어요.</strong>
-          <br />
-          {registered === "new_topic"
-            ? "비슷한 의제가 없어 새 의제로 등록했어요."
-            : "기존 의제에 내 글을 연결했어요. 같은 문제를 겪었다면 아래 참여 버튼을 눌러 주세요."}
+          {registered === "new_topic" ? "새 의제로 등록했어요." : "기존 의제에 내 글을 연결했어요."}
         </div>
       )}
       {topic && (
@@ -101,7 +95,6 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
       <section className="detail-head">
         <div className="row gap">
           <span className={`chip type-${topic.type}`}>{TYPE_LABEL[topic.type]}</span>
-          <span className="muted small">{TYPE_HINT[topic.type]}</span>
         </div>
         <div className="muted small">{placeLabel(topic)}</div>
         <div className="title-row">
@@ -124,7 +117,6 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
           <span className="k">처리 상태</span>
           <span className={`chip status-${topic.status}`}>{STATUS_LABEL[topic.status]}</span>
         </div>
-        <p className="muted small">{STATUS_MEANING[topic.status]}</p>
         <div className="kv">
           <span className="k">전달 상태</span>
           <span className={`chip delivery-${topic.delivery_status}`}>{DELIVERY_LABEL[topic.delivery_status]}</span>
@@ -150,7 +142,6 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
               <JoinButton
                 label="나도 겪었어요"
                 count={`경험자 ${c.experienced}명`}
-                hint="같은 문제를 직접 겪었을 때"
                 on={topic.my_participations.includes("experienced")}
                 busy={pending === "experienced"}
                 onClick={() => toggle("experienced")}
@@ -158,7 +149,6 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
               <JoinButton
                 label="개선이 필요해요"
                 count={`개선 지지 ${c.needs_improvement}명`}
-                hint="직접 겪지 않았어도 개선을 바랄 때"
                 on={topic.my_participations.includes("needs_improvement")}
                 busy={pending === "needs_improvement"}
                 onClick={() => toggle("needs_improvement")}
@@ -168,7 +158,6 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
             <JoinButton
               label="나도 원해요"
               count={`제안 지지 ${c.want}명`}
-              hint="같은 변화를 원할 때"
               on={topic.my_participations.includes("want")}
               busy={pending === "want"}
               onClick={() => toggle("want")}
@@ -182,9 +171,6 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
           <span className="muted small">전달 기준 {topic.threshold}명</span>
         </div>
         {actionError && <div className="field-error">{actionError}</div>}
-        <p className="muted small">
-          한 사람이 두 버튼을 모두 눌러도 고유 참여는 1명으로 셉니다. 글 작성·댓글·구독은 참여 인원에 포함되지 않아요.
-        </p>
       </section>
 
       <section className="card">
@@ -246,7 +232,6 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
 function JoinButton(props: {
   label: string;
   count: string;
-  hint: string;
   on: boolean;
   busy: boolean;
   onClick: () => void;
@@ -258,7 +243,6 @@ function JoinButton(props: {
         {props.label}
       </span>
       <span className="join-count">{props.count}</span>
-      <span className="join-hint">{props.on ? "다시 누르면 취소" : props.hint}</span>
     </button>
   );
 }

@@ -149,20 +149,13 @@ export function WritePage() {
       </div>
 
       <form className="write-body" onSubmit={onSubmit} noValidate>
-        <div className="type-guide">
-          <span className="chip type-issue">Issue</span>
-          <span className="small">
-            <strong>지금 겪고 있는 문제</strong>를 알려 주세요. 원하는 제도·행사 변화는 Proposal이에요.
-          </span>
-        </div>
-
         <div className="field">
           <span className="field-label">장소 *</span>
           <BuildingSearch
             buildings={buildings}
             selected={building}
             onSelect={setBuildingId}
-            placeholder="건물 이름이나 번호로 찾기 (예: 디도, 248)"
+            placeholder="건물 검색 (예: 디도, 248)"
             invalid={!!errors.building_id}
           />
           {errors.building_id && <div className="field-error">{errors.building_id}</div>}
@@ -179,7 +172,7 @@ export function WritePage() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="비워 두면 내용 첫 줄을 제목으로 써요"
+            placeholder="비우면 내용 첫 줄"
             maxLength={100}
           />
           {errors.title && <div className="field-error">{errors.title}</div>}
@@ -246,7 +239,7 @@ export function WritePage() {
           />
           {photoError && <div className="field-error">{photoError}</div>}
           {/* REQ-LEG-03 */}
-          <p className="muted small">다른 사람을 알아볼 수 있는 사진은 올리지 말아 주세요. 사진의 위치 정보는 저장하지 않아요.</p>
+          <p className="muted small">다른 사람이 알아볼 수 있는 사진은 피해 주세요.</p>
         </div>
 
         {formError && <div className="banner warn">{formError}</div>}
@@ -286,7 +279,7 @@ function SimilarPanel({
     // 검색 실패는 '유사 의제 없음'으로 표시하지 않는다 (REQ-SIM-09)
     return (
       <div className="similar-box failed" aria-live="polite">
-        <span className="small">비슷한 의제를 찾지 못했어요(검색 오류). 새 의제로 등록할 수 있어요.</span>
+        <span className="small">추천을 불러오지 못했어요.</span>
         <button type="button" className="btn small" onClick={onRetry}>
           다시 찾기
         </button>
@@ -296,14 +289,13 @@ function SimilarPanel({
   if (similar.candidates.length === 0) {
     return (
       <div className="similar-box muted small" aria-live="polite">
-        이 장소에 비슷한 의제가 없어요. 새 의제로 등록돼요.
+        비슷한 의제가 없어요.
       </div>
     );
   }
   return (
     <section className="similar-box found" aria-live="polite">
       <h2>비슷한 의제가 있어요</h2>
-      <p className="muted small">같은 문제라면 새로 쓰지 말고 기존 의제에 참여해 주세요. 목소리가 한곳에 모여요.</p>
       <ul className="similar-list">
         {similar.candidates.map((c) => {
           const t = c.topic;
@@ -312,7 +304,7 @@ function SimilarPanel({
               <div className="row gap wrap">
                 <span className={`chip type-${t.type}`}>Issue</span>
                 <span className={`chip relation-${c.relation}`}>
-                  {c.relation === "same" ? "같은 문제로 보여요" : "관련 있을 수 있어요"}
+                  {c.relation === "same" ? "같은 문제" : "관련 있음"}
                 </span>
               </div>
               <div className="similar-title">{t.title}</div>

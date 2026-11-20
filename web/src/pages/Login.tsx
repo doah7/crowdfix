@@ -76,8 +76,7 @@ export function Login() {
       </form>
 
       <section className="demo-accounts">
-        <h2>시연용 계정으로 바로 로그인</h2>
-        <p className="muted small">학교 계정 연동 대신 시연용 계정을 사용합니다.</p>
+        <h2>시연용 계정</h2>
         <div className="demo-grid">
           {DEMO_ACCOUNTS.map((a) => (
             <button key={a.id} className="btn" disabled={busy} onClick={() => void doLogin(a.id, DEMO_PASSWORD)}>

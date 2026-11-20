@@ -5,7 +5,7 @@ import { BuildingSearch } from "../components/BuildingSearch";
 import { CampusMap, groupByBuilding } from "../components/CampusMap";
 import { Header } from "../components/Header";
 import { TopicCard } from "../components/TopicCard";
-import { STATUS_LABEL, TYPE_HINT, TYPE_LABEL } from "../labels";
+import { STATUS_LABEL, TYPE_LABEL } from "../labels";
 
 const STATUSES: Status[] = ["backlog", "in_progress", "done"];
 
@@ -245,7 +245,6 @@ function ListPane(props: {
             onClick={() => props.onTab(t)}
           >
             {TYPE_LABEL[t]}
-            <span className="tab-hint">{TYPE_HINT[t]}</span>
           </button>
         ))}
       </div>
@@ -296,7 +295,10 @@ function EmptyPlace({ building }: { building: Building | null }) {
       <p>
         <strong>{building.name_ko}</strong>에 등록된 문제가 없어요.
       </p>
-      <p className="muted small">등록된 문제가 없다고 해서 시설이 정상 작동한다는 뜻은 아니에요.</p>
+      <p className="muted small">불편한 점이 있다면 직접 알려 주세요.</p>
+      <Link className="btn small primary empty-write" to={`/write?b=${building.id}`}>
+        ✏️ 글쓰기
+      </Link>
     </div>
   );
 }
