@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { ApiError, api, type TopicDetail } from "../api";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  ApiError,
+  api,
+  setParticipation,
+  setSubscription,
+  type ParticipationKind,
+  type ParticipationState,
+  type TopicDetail,
+} from "../api";
 import { Header } from "../components/Header";
 import {
   DELIVERY_LABEL,
@@ -22,6 +30,8 @@ import {
 export function TopicDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const registered = (location.state as { registered?: string } | null)?.registered ?? null;
   const [topic, setTopic] = useState<TopicDetail | null>(null);
   const [error, setError] = useState<"not_found" | "failed" | null>(null);
 
@@ -47,13 +57,43 @@ export function TopicDetailPage() {
       {error === "not_found" && <div className="state-box">더 이상 확인할 수 없는 의제예요.</div>}
       {error === "failed" && <div className="state-box">요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요.</div>}
       {!topic && !error && <p className="muted pad">불러오는 중…</p>}
-      {topic && <DetailBody topic={topic} />}
+      {topic && registered && (
+        // Report 등록 결과와 의제 연결 결과를 구분해 보여준다 (REQ-UI-21)
+        <div className="banner ok" role="status">
+          <strong>Report를 등록했어요.</strong>
+          <br />
+          {registered === "new_topic"
+            ? "비슷한 의제가 없어 새 의제로 등록했어요."
+            : "기존 의제에 연결했어요."}
+        </div>
+      )}
+      {topic && (
+        <DetailBody topic={topic} onState={(st) => setTopic({ ...topic, ...st, counts: st.counts })} />
+      )}
     </div>
   );
 }
 
-function DetailBody({ topic }: { topic: TopicDetail }) {
+function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: ParticipationState) => void }) {
   const c = topic.counts;
+  const [pending, setPending] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  async function run(key: string, fn: () => Promise<ParticipationState>) {
+    if (pending) return;
+    setPending(key);
+    setActionError(null);
+    try {
+      onState(await fn());
+    } catch {
+      setActionError("요청을 처리하지 못했어요. 다시 눌러 주세요.");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  const toggle = (kind: ParticipationKind) =>
+    run(kind, () => setParticipation(topic.id, kind, !topic.my_participations.includes(kind)));
   const latestDone = [...topic.history].reverse().find((h) => h.to_status === "done");
 
   return (
@@ -64,8 +104,18 @@ function DetailBody({ topic }: { topic: TopicDetail }) {
           <span className="muted small">{TYPE_HINT[topic.type]}</span>
         </div>
         <div className="muted small">{placeLabel(topic)}</div>
-        <h1>{topic.title}</h1>
-        {topic.summary && <p className="muted">{topic.summary}</p>}
+        <div className="title-row">
+          <h1>{topic.title}</h1>
+          <button
+            className={`btn small subscribe ${topic.subscribed ? "on" : ""}`}
+            aria-pressed={topic.subscribed}
+            disabled={pending !== null}
+            onClick={() => run("sub", () => setSubscription(topic.id, !topic.subscribed))}
+          >
+            {topic.subscribed ? "🔔 구독 중" : "구독"}
+          </button>
+        </div>
+        {topic.summary && topic.summary !== topic.title && <p className="muted">{topic.summary}</p>}
       </section>
 
       {/* 처리 상태와 전달 상태는 각각 별도 줄로 표시한다 (REQ-UI-13) */}
@@ -93,17 +143,45 @@ function DetailBody({ topic }: { topic: TopicDetail }) {
 
       <section className="card">
         <h2>참여</h2>
-        <div className="count-grid">
+        {/* 참여 버튼: 본인의 선택 여부와 집계를 함께 표시한다 (REQ-UI-12) */}
+        <div className="join-buttons">
           {topic.type === "issue" ? (
             <>
-              <Count label="경험자" value={c.experienced} hint="나도 겪었어요" />
-              <Count label="개선 지지" value={c.needs_improvement} hint="개선이 필요해요" />
+              <JoinButton
+                label="나도 겪었어요"
+                count={`경험자 ${c.experienced}명`}
+                hint="같은 문제를 직접 겪었을 때"
+                on={topic.my_participations.includes("experienced")}
+                busy={pending === "experienced"}
+                onClick={() => toggle("experienced")}
+              />
+              <JoinButton
+                label="개선이 필요해요"
+                count={`개선 지지 ${c.needs_improvement}명`}
+                hint="직접 겪지 않았어도 개선을 바랄 때"
+                on={topic.my_participations.includes("needs_improvement")}
+                busy={pending === "needs_improvement"}
+                onClick={() => toggle("needs_improvement")}
+              />
             </>
           ) : (
-            <Count label="제안 지지" value={c.want} hint="나도 원해요" />
+            <JoinButton
+              label="나도 원해요"
+              count={`제안 지지 ${c.want}명`}
+              hint="같은 변화를 원할 때"
+              on={topic.my_participations.includes("want")}
+              busy={pending === "want"}
+              onClick={() => toggle("want")}
+            />
           )}
-          <Count label="고유 참여" value={c.unique} hint={`전달 기준 ${topic.threshold}명`} strong />
         </div>
+        <div className="unique-row">
+          <span>
+            고유 참여 <strong>{c.unique}명</strong>
+          </span>
+          <span className="muted small">전달 기준 {topic.threshold}명</span>
+        </div>
+        {actionError && <div className="field-error">{actionError}</div>}
         <p className="muted small">
           한 사람이 두 버튼을 모두 눌러도 고유 참여는 1명으로 셉니다. 글 작성·댓글·구독은 참여 인원에 포함되지 않아요.
         </p>
@@ -165,12 +243,22 @@ function DetailBody({ topic }: { topic: TopicDetail }) {
   );
 }
 
-function Count({ label, value, hint, strong }: { label: string; value: number; hint: string; strong?: boolean }) {
+function JoinButton(props: {
+  label: string;
+  count: string;
+  hint: string;
+  on: boolean;
+  busy: boolean;
+  onClick: () => void;
+}) {
   return (
-    <div className={`count ${strong ? "strong" : ""}`}>
-      <div className="count-value">{value}명</div>
-      <div className="count-label">{label}</div>
-      <div className="muted small">{hint}</div>
-    </div>
+    <button className={`join ${props.on ? "on" : ""}`} aria-pressed={props.on} disabled={props.busy} onClick={props.onClick}>
+      <span className="join-label">
+        {props.on ? "✓ " : ""}
+        {props.label}
+      </span>
+      <span className="join-count">{props.count}</span>
+      <span className="join-hint">{props.on ? "다시 누르면 취소" : props.hint}</span>
+    </button>
   );
 }

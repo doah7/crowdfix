@@ -3,6 +3,7 @@ import { useAuth } from "./auth";
 import { Explore } from "./pages/Explore";
 import { Login } from "./pages/Login";
 import { TopicDetailPage } from "./pages/TopicDetail";
+import { WritePage } from "./pages/Write";
 
 export function App() {
   const { user, loading } = useAuth();
@@ -23,6 +24,7 @@ export function App() {
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/" element={<Explore />} />
       <Route path="/topics/:id" element={<TopicDetailPage />} />
+      <Route path="/write" element={<WritePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

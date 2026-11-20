@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 60 * 12
     buildings_csv: str = "../data/skku_natural_campus_buildings.csv"
     upload_dir: str = "./uploads"
+    # 사진 첨부 제한 (데모 문서 TBD-09): JPG·PNG, 장당 5MB 이하, Report당 1장
+    photo_max_bytes: int = 5 * 1024 * 1024
+    photo_max_count: int = 1
 
     # 자동 전달 기준값 T (SRS BR-07). 시연 환경은 두 유형 모두 3명.
     threshold_issue: int = 3

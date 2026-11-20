@@ -124,3 +124,59 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   return res.json() as Promise<T>;
 }
+
+export interface ParticipationState {
+  counts: Counts;
+  my_participations: string[];
+  subscribed: boolean;
+}
+
+export type ParticipationKind = "experienced" | "needs_improvement" | "want";
+
+export function setParticipation(topicId: number, kind: ParticipationKind, on: boolean) {
+  return api<ParticipationState>(`/api/topics/${topicId}/participations/${kind}`, { method: on ? "PUT" : "DELETE" });
+}
+
+export function setSubscription(topicId: number, on: boolean) {
+  return api<ParticipationState>(`/api/topics/${topicId}/subscription`, { method: on ? "PUT" : "DELETE" });
+}
+
+export interface ReportCreated {
+  report_id: number;
+  topic_id: number;
+  link: "new_topic" | "user_selected" | "ai_auto";
+}
+
+/** 입력 오류(422)일 때 항목별 사유를 함께 돌려준다. */
+export class FieldErrors extends ApiError {
+  constructor(public fields: Record<string, string>) {
+    super(422, "validation");
+  }
+}
+
+export async function createReport(form: FormData): Promise<ReportCreated> {
+  const headers = new Headers();
+  const token = getToken();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  let res: Response;
+  try {
+    res = await fetch("/api/reports", { method: "POST", body: form, headers });
+  } catch {
+    throw new ApiError(0, "network");
+  }
+  if (res.ok) return res.json();
+  let detail: { type?: string; fields?: Record<string, string> } = {};
+  try {
+    detail = (await res.json())?.detail ?? {};
+  } catch {
+    /* 본문 없음 */
+  }
+  if (res.status === 422 && detail.fields) throw new FieldErrors(detail.fields);
+  if (res.status === 401 && onUnauthorized) onUnauthorized(detail.type ?? "auth_required");
+  throw new ApiError(res.status, detail.type ?? "server_error");
+}
+
+export function newRequestId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}

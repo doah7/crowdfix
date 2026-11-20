@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api, type Building, type Status, type TopicSummary, type TopicType } from "../api";
+import { BuildingSearch } from "../components/BuildingSearch";
 import { CampusMap, groupByBuilding } from "../components/CampusMap";
 import { Header } from "../components/Header";
 import { TopicCard } from "../components/TopicCard";
@@ -148,6 +149,10 @@ export function Explore() {
         <button className={view === "list" ? "on" : ""} onClick={() => update({ view: "list" })}>
           목록
         </button>
+        {/* Report 작성 버튼 (REQ-UI-03). 선택한 건물이 있으면 장소로 미리 채운다. */}
+        <Link className="write-btn" to={selectedBuilding ? `/write?b=${selectedBuilding}` : "/write"}>
+          ✏️ 글쓰기
+        </Link>
       </nav>
     </div>
   );
@@ -292,79 +297,6 @@ function EmptyPlace({ building }: { building: Building | null }) {
         <strong>{building.name_ko}</strong>에 등록된 문제가 없어요.
       </p>
       <p className="muted small">등록된 문제가 없다고 해서 시설이 정상 작동한다는 뜻은 아니에요.</p>
-    </div>
-  );
-}
-
-function BuildingSearch({
-  buildings,
-  selected,
-  onSelect,
-}: {
-  buildings: Building[];
-  selected: Building | null;
-  onSelect: (id: number | null) => void;
-}) {
-  const [q, setQ] = useState("");
-  const [open, setOpen] = useState(false);
-  const matches = useMemo(() => {
-    const s = q.trim().toLowerCase();
-    if (!s) return [];
-    return buildings
-      .filter(
-        (b) =>
-          b.name_ko.toLowerCase().includes(s) ||
-          b.name_en.toLowerCase().includes(s) ||
-          (b.build_no ?? "").startsWith(s),
-      )
-      .slice(0, 8);
-  }, [q, buildings]);
-
-  if (selected) {
-    return (
-      <div className="search selected">
-        <span>📍 {selected.name_ko}</span>
-        <button className="link-btn" onClick={() => onSelect(null)} aria-label="장소 선택 해제">
-          ✕
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="search">
-      <input
-        value={q}
-        placeholder="건물·장소 검색 (예: 삼성학술정보관, 248)"
-        onChange={(e) => {
-          setQ(e.target.value);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        aria-label="건물·장소 검색"
-      />
-      {open && matches.length > 0 && (
-        <ul className="suggest">
-          {matches.map((b) => (
-            <li key={b.id}>
-              <button
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  onSelect(b.id);
-                  setQ("");
-                  setOpen(false);
-                }}
-              >
-                <span>{b.name_ko}</span>
-                <span className="muted small">
-                  {b.build_no ?? ""} {b.topic_count > 0 ? `· 의제 ${b.topic_count}건` : ""}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from .routers import auth, buildings, notifications, topics
+from .routers import auth, buildings, notifications, reports, topics
 
 app = FastAPI(
     title="CrowdFix API",
@@ -14,6 +14,7 @@ app.include_router(auth.router)
 app.include_router(buildings.router)
 app.include_router(topics.router)
 app.include_router(notifications.router)
+app.include_router(reports.router)
 
 
 @app.get("/api/health", tags=["meta"])

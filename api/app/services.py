@@ -1,8 +1,10 @@
 """여러 라우터가 함께 쓰는 집계·변환 로직."""
 
+import re
 from collections import defaultdict
 
 from sqlalchemy import func, select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from . import models as m
@@ -64,3 +66,53 @@ def to_summary(topic: m.Topic, counts: Counts, n_reports: int) -> dict:
         last_report_at=topic.last_report_at,
         created_at=topic.created_at,
     ).model_dump()
+
+
+def auto_subscribe(db: Session, user_id: int, topic_id: int) -> None:
+    """Report 작성자·참여자 자동 구독 (FR-NOTI-02).
+    이미 구독 기록이 있으면(명시적으로 해제한 경우 포함) 건드리지 않는다."""
+    db.execute(
+        insert(m.Subscription)
+        .values(user_id=user_id, topic_id=topic_id, active=True)
+        .on_conflict_do_nothing(constraint="uq_subscription")
+    )
+
+
+# 담당 조직 연결표(org_routes)의 분류를 고르기 위한 간단한 키워드 규칙.
+# 맞는 분류가 없으면 None → 자동 전달 시 '운영자 검토 중'으로 보낸다 (FR-STAT-13).
+_CATEGORY_KEYWORDS = [
+    ("printer", ("프린터", "출력", "인쇄", "용지", "토너", "printer", "print")),
+    ("wifi", ("와이파이", "wi-fi", "wifi", "인터넷", "네트워크")),
+    ("power", ("콘센트", "전원", "충전", "outlet")),
+    ("hvac", ("에어컨", "냉방", "난방", "히터", "air conditioner")),
+]
+
+
+def guess_category(text: str) -> str | None:
+    t = text.lower()
+    for category, words in _CATEGORY_KEYWORDS:
+        if any(w in t for w in words):
+            return category
+    return None
+
+
+_FLOOR_RE = re.compile(r"(?<![A-Za-z0-9])(B[1-9])(?![0-9])|(?<![0-9])([1-9][0-9]?)\s*(?:F|층)(?![A-Za-z])", re.I)
+
+
+def guess_floor(text: str) -> str | None:
+    """본문에 'B1', '3층', '3F'가 있으면 층으로 쓴다. 사용자가 층을 직접 입력하면 그 값을 우선한다."""
+    mt = _FLOOR_RE.search(text)
+    if not mt:
+        return None
+    return mt.group(1).upper() if mt.group(1) else f"{mt.group(2)}F"
+
+
+def add_participation(db: Session, topic: m.Topic, user_id: int, kind: str) -> None:
+    """참여 등록 (같은 버튼 반복은 한 번만). 버튼을 누른 사용자는 자동 구독된다 (FR-NOTI-02).
+    호출하는 쪽에서 topic 행을 잠그고(SELECT … FOR UPDATE) 커밋한다."""
+    db.execute(
+        insert(m.Participation)
+        .values(user_id=user_id, topic_id=topic.id, kind=kind)
+        .on_conflict_do_nothing(constraint="uq_participation")
+    )
+    auto_subscribe(db, user_id, topic.id)
