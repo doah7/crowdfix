@@ -162,6 +162,10 @@ p { margin: 0.25rem 0; }
   padding: 6px 11px; font-size: 0.8rem; white-space: nowrap; cursor: pointer;
 }
 .filter-chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+/* 상태 필터는 상세 화면의 상태 알약과 같은 색 조합으로 선택 표시 */
+.filter-chip.status-backlog.on { background: var(--backlog-soft); color: var(--backlog); border-color: transparent; font-weight: 800; }
+.filter-chip.status-in_progress.on { background: #e8eefc; color: #3b63d9; border-color: transparent; font-weight: 800; }
+.filter-chip.status-done.on { background: var(--done-soft); color: var(--done); border-color: transparent; font-weight: 800; }
 
 /* 하단 여백: 지도|목록 바(약 64px) + 글쓰기 버튼(56px)에 가리지 않도록 */
 .explore-body { flex: 1; display: flex; flex-direction: column; padding-bottom: 148px; }

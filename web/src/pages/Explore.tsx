@@ -74,9 +74,9 @@ export function Explore() {
     [building],
   );
 
+  // 상태 필터는 한 번에 하나만 고른다. 고른 것을 다시 누르면 '전체'로 돌아간다.
   function toggleStatus(s: Status) {
-    const next = statusFilter.includes(s) ? statusFilter.filter((x) => x !== s) : [...statusFilter, s];
-    update({ status: next.join(",") || null });
+    update({ status: statusFilter.length === 1 && statusFilter[0] === s ? null : s });
   }
 
   return (
@@ -99,7 +99,7 @@ export function Explore() {
           {STATUSES.map((s) => (
             <button
               key={s}
-              className={`filter-chip ${statusFilter.includes(s) ? "on" : ""}`}
+              className={`filter-chip status-${s} ${statusFilter.includes(s) ? "on" : ""}`}
               aria-pressed={statusFilter.includes(s)}
               onClick={() => toggleStatus(s)}
             >
