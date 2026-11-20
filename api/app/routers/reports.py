@@ -20,6 +20,7 @@ from ..services import (
     auto_subscribe,
     guess_category,
     guess_floor,
+    guess_room,
     participation_counts,
     report_counts,
     to_summary,
@@ -150,6 +151,7 @@ async def create_report(
                 category=guess_category(text),
                 building_id=building.id,
                 floor=floor_value,
+                room=guess_room(text),
                 status="backlog",            # 새 의제의 초기 상태 (FR-STAT-01)
                 delivery_status="not_sent",
                 last_report_at=now,

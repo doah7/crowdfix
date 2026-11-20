@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     embedding_dim: int = 384
 
     # 유사 의제 판정 기준 (TBD-06). AI 테스트 문장으로 정한 값이다. README 'AI 추천 기준' 참고.
-    similar_min_text: int = 8          # 본문이 이보다 짧으면 검색하지 않는다
+    similar_min_text: int = 5          # 본문이 이보다 짧으면 검색하지 않는다
     # 본문에서 뽑은 대상(프린터·Wi-Fi 등)이 후보와 같을 때
     similar_same_target: float = 0.55      # 이 이상이면 '같음'
     similar_related_target: float = 0.40   # 이 이상이면 '관련 있음'

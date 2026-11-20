@@ -117,3 +117,12 @@ def add_participation(db: Session, topic: m.Topic, user_id: int, kind: str) -> N
         .on_conflict_do_nothing(constraint="uq_participation")
     )
     auto_subscribe(db, user_id, topic.id)
+
+
+# 강의실·호실 번호: 5~6자리 숫자(예: 26312 = 26동 3층 12호). 지하는 48B07처럼 B를 쓴다.
+_ROOM_RE = re.compile(r"(?<![0-9A-Za-z])([0-9]{5,6}|[0-9]{2}B[0-9]{2,3})(?![0-9A-Za-z])", re.I)
+
+
+def guess_room(text: str) -> str | None:
+    mt = _ROOM_RE.search(text)
+    return mt.group(1).upper() if mt else None

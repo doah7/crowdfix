@@ -18,7 +18,7 @@ import { placeLabel } from "../labels";
 const PHOTO_MAX = 1;
 const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 const PHOTO_TYPES = ["image/jpeg", "image/png"];
-const SIMILAR_MIN_TEXT = 8;
+const SIMILAR_MIN_TEXT = 5;
 const SIMILAR_DEBOUNCE_MS = 500;
 
 type Similar =
@@ -271,8 +271,13 @@ function SimilarPanel({
   if (similar.state === "idle") return null;
   if (similar.state === "searching") {
     return (
-      <div className="similar-box muted small" aria-live="polite">
-        비슷한 의제를 찾는 중…
+      <div className="similar-box searching small" aria-live="polite">
+        <span className="search-dots" aria-hidden>
+          <i />
+          <i />
+          <i />
+        </span>
+        비슷한 의제를 찾는 중
       </div>
     );
   }
@@ -298,10 +303,10 @@ function SimilarPanel({
     <section className="similar-box found" aria-live="polite">
       <h2>비슷한 의제가 있어요</h2>
       <ul className="similar-list">
-        {similar.candidates.map((c) => {
+        {similar.candidates.map((c, i) => {
           const t = c.topic;
           return (
-            <li key={t.id} className="similar-item">
+            <li key={t.id} className="similar-item" style={{ animationDelay: `${120 + i * 90}ms` }}>
               <div className="row gap wrap">
                 <span className={`chip type-${t.type}`}>Issue</span>
                 <span className={`chip relation-${c.relation}`}>
