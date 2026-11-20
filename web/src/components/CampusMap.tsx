@@ -33,6 +33,10 @@ export function groupByBuilding(topics: TopicSummary[]): MarkerGroup[] {
 
 const ISSUE = "#ee6a4b";
 const PROPOSAL = "#4f6bed";
+// 배지의 숫자가 '사람 수'임을 보여주는 작은 사람 아이콘
+const PERSON_ICON = `<svg viewBox="0 0 24 24" width="10" height="10" aria-hidden="true">
+  <circle cx="12" cy="7.5" r="4.5" fill="currentColor"/>
+  <path d="M3.5 21c0-4.4 3.8-7.5 8.5-7.5s8.5 3.1 8.5 7.5z" fill="currentColor"/></svg>`;
 
 function pinSvg(color: string, cls: string) {
   return `<svg class="pin ${cls}" viewBox="0 0 32 42" aria-hidden="true">
@@ -54,10 +58,10 @@ function markerIcon(g: MarkerGroup, selected: boolean) {
     <div class="pin-stack ${selected ? "selected" : ""}">
       ${back}${front}
       <span class="pin-count">${g.topics.length}</span>
-      <span class="pin-badge">${people}</span>
+      <span class="pin-badge">${PERSON_ICON}${people}</span>
     </div>`;
   // 앞 핀의 뾰족한 끝이 건물 좌표를 가리킨다
-  return L.divIcon({ html, className: "marker-wrap", iconSize: [56, 54], iconAnchor: [26, 51] });
+  return L.divIcon({ html, className: "marker-wrap", iconSize: [66, 54], iconAnchor: [26, 51] });
 }
 
 /** 처음 열 때 의제가 있는 건물이 모두 보이도록 화면을 맞춘다. */

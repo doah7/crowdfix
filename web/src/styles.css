@@ -390,7 +390,7 @@ p { margin: 0.25rem 0; }
 
 /* ---------- 지도 마커: 핀 + 인원 배지 (Issue 주황, Proposal 파랑, 둘 다면 겹침) ---------- */
 .marker-wrap { background: none; border: none; }
-.pin-stack { position: relative; width: 56px; height: 54px; transition: transform 0.15s ease; transform-origin: 26px 52px; }
+.pin-stack { position: relative; width: 66px; height: 54px; transition: transform 0.15s ease; transform-origin: 26px 52px; }
 .pin-stack.selected { transform: scale(1.18); }
 .pin { position: absolute; width: 32px; height: 42px; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3)); }
 .pin.back { left: 2px; top: 8px; }
@@ -400,12 +400,16 @@ p { margin: 0.25rem 0; }
   position: absolute; left: 10px; top: 16px; width: 32px; text-align: center;
   color: #fff; font-weight: 800; font-size: 15px; line-height: 20px; z-index: 2;
 }
+/* 인원 배지: 테두리 없이 그림자로 띄운 흰 알약 + 사람 아이콘 */
 .pin-badge {
-  position: absolute; right: 0; top: 0; min-width: 24px; height: 24px; padding: 0 4px; border-radius: 12px;
-  background: #fff; border: 2px solid #1d2320; color: #1d2320;
-  font-weight: 800; font-size: 11px; line-height: 20px; text-align: center; z-index: 3;
+  position: absolute; left: 30px; top: 0; height: 20px; padding: 0 7px 0 6px; border-radius: 10px;
+  display: inline-flex; align-items: center; gap: 3px; white-space: nowrap;
+  background: #fff; color: #3a4148; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  font-weight: 800; font-size: 11px; line-height: 1; z-index: 3;
 }
-.pin-stack.selected .pin-badge { background: #1d2320; color: #fff; }
+.pin-badge svg { color: #8a9299; }
+.pin-stack.selected .pin-badge { background: var(--brand); color: #fff; }
+.pin-stack.selected .pin-badge svg { color: #cfe0f2; }
 
 /* ---------- 구분선 (연결된 Report, 처리 이력 위) ---------- */
 .detail-body > section { border-top: 1px solid #eceef0; padding-top: 16px; }
