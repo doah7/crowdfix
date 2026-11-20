@@ -43,6 +43,7 @@ export interface TopicSummary {
   report_count: number;
   last_report_at: string;
   created_at: string;
+  my_participations?: string[];
 }
 
 export interface TopicDetail extends TopicSummary {

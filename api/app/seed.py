@@ -57,13 +57,13 @@ SEED_TOPICS = [
         "build_no": "248",
         "floor": "B1",
         "category": "wifi",
-        "title": "디도 B1 Wi-Fi가 자주 끊겨요",
+        "title": "B1 Wi-Fi가 자주 끊겨요",
         "summary": "삼성학술정보관 지하 1층에서 Wi-Fi 연결이 수시로 끊김",
         "status": "in_progress",
         "delivery_status": "sent",
         "created": ago(days=9),
         "reports": [
-            ("seed01", "B1 와이파이 끊김", "디도 지하 1층 열람석에서 와이파이가 10분마다 끊겨요. 재접속해도 금방 다시 끊깁니다.", ago(days=9)),
+            ("seed01", "B1 와이파이 끊김", "삼성학술정보관 지하 1층 열람석에서 와이파이가 10분마다 끊겨요. 재접속해도 금방 다시 끊깁니다.", ago(days=9)),
             ("seed04", "지하 와이파이 불안정", "B1 그룹스터디룸 쪽 Wi-Fi가 계속 끊겨서 온라인 강의를 못 들었어요.", ago(days=6)),
         ],
         "participations": {

@@ -64,6 +64,9 @@ export function Explore() {
   }, []);
 
   const all = topics.state === "ok" ? topics.data : [];
+  // 카드에서 참여 버튼을 누르면 그 의제만 바꿔 끼워, 지도 마커 인원도 함께 갱신한다
+  const replaceTopic = (t: TopicSummary) =>
+    setTopics((prev) => (prev.state === "ok" ? { state: "ok", data: prev.data.map((x) => (x.id === t.id ? t : x)) } : prev));
   const groups = useMemo(() => groupByBuilding(all), [all]);
   const building = buildings.find((b) => b.id === selectedBuilding) ?? null;
   const focus = useMemo<[number, number] | null>(
@@ -126,6 +129,7 @@ export function Explore() {
             onSelect={(id) => update({ b: String(id) })}
             onClear={() => update({ b: null })}
             onGoList={() => update({ view: "list" })}
+            onUpdate={replaceTopic}
           />
         ) : (
           <ListPane
@@ -137,6 +141,7 @@ export function Explore() {
             onTab={(t) => update({ tab: t === "issue" ? null : t })}
             onSort={(s) => update({ sort: s === "latest" ? null : s })}
             onClearBuilding={() => update({ b: null })}
+            onUpdate={replaceTopic}
           />
         )}
       </main>
@@ -167,6 +172,7 @@ function MapPane(props: {
   onSelect: (id: number) => void;
   onClear: () => void;
   onGoList: () => void;
+  onUpdate: (t: TopicSummary) => void;
 }) {
   const { building } = props;
   const shown = building ? props.allLocated.filter((t) => t.building?.id === building.id) : props.allLocated;
@@ -193,18 +199,14 @@ function MapPane(props: {
       </div>
 
       <section className="sheet">
-        <div className="sheet-head">
-          {building ? (
-            <>
-              <h2>{building.name_ko}</h2>
-              <button className="link-btn" onClick={props.onClear}>
-                전체 보기
-              </button>
-            </>
-          ) : (
-            <h2>지도에 표시된 의제 {props.loading ? "" : `${shown.length}건`}</h2>
-          )}
-        </div>
+        {building && (
+          <div className="sheet-head">
+            <h2>{building.name_ko}</h2>
+            <button className="link-btn" onClick={props.onClear}>
+              전체 보기
+            </button>
+          </div>
+        )}
         {props.loading ? (
           <p className="muted">불러오는 중…</p>
         ) : shown.length === 0 ? (
@@ -212,7 +214,7 @@ function MapPane(props: {
         ) : (
           <div className="card-list">
             {shown.map((t) => (
-              <TopicCard key={t.id} topic={t} />
+              <TopicCard key={t.id} topic={t} onUpdate={props.onUpdate} />
             ))}
           </div>
         )}
@@ -230,6 +232,7 @@ function ListPane(props: {
   onTab: (t: TopicType) => void;
   onSort: (s: "latest" | "participants") => void;
   onClearBuilding: () => void;
+  onUpdate: (t: TopicSummary) => void;
 }) {
   return (
     <section className="list-pane">
@@ -277,7 +280,7 @@ function ListPane(props: {
       ) : (
         <div className="card-list">
           {props.topics.map((t) => (
-            <TopicCard key={t.id} topic={t} />
+            <TopicCard key={t.id} topic={t} onUpdate={props.onUpdate} />
           ))}
         </div>
       )}

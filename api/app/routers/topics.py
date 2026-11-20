@@ -38,7 +38,15 @@ def list_topics(
     ids = [t.id for t in topics]
     counts = participation_counts(db, ids)
     n_reports = report_counts(db, ids)
-    items = [to_summary(t, counts[t.id], n_reports.get(t.id, 0)) for t in topics]
+    mine: dict[int, list[str]] = {}
+    if ids:
+        for tid, kind in db.execute(
+            select(m.Participation.topic_id, m.Participation.kind)
+            .where(m.Participation.topic_id.in_(ids), m.Participation.user_id == _user.id)
+        ):
+            mine.setdefault(tid, []).append(kind)
+    items = [to_summary(t, counts[t.id], n_reports.get(t.id, 0)) | {"my_participations": mine.get(t.id, [])}
+             for t in topics]
     if sort == "participants":
         items.sort(key=lambda x: (x["counts"]["unique"], x["last_report_at"]), reverse=True)
     else:
@@ -68,6 +76,7 @@ def get_topic(topic_id: int, db: Session = Depends(get_db), user: m.User = Depen
     ).all()
 
     base = to_summary(topic, counts, len(topic.reports))
+    base.pop("my_participations", None)
     return TopicDetail(
         **base,
         result=topic.result,

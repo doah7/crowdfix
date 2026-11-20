@@ -1,5 +1,5 @@
 :root {
-  --bg: #f4f5f2;
+  --bg: #ffffff;
   --surface: #ffffff;
   --ink: #1d2320;
   --muted: #66706b;
@@ -197,15 +197,30 @@ p { margin: 0.25rem 0; }
 }
 
 .topic-card {
-  display: flex; flex-direction: column; gap: 4px; background: var(--surface);
-  border: 1px solid var(--line); border-left: 4px solid var(--issue); border-radius: var(--radius); padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 6px; background: #fff; cursor: pointer;
+  border: 1.5px solid #e6e8eb; border-radius: 16px; padding: 16px 18px;
 }
-.topic-card.proposal { border-left-color: var(--proposal); }
-.topic-card-top { display: flex; gap: 6px; flex-wrap: wrap; }
-.topic-card-title { font-weight: 700; margin-top: 2px; }
-.topic-card-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 2px; }
+.topic-card:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.topic-card-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.topic-card-kind { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.02em; color: var(--issue); }
+.topic-card.proposal .topic-card-kind { color: #4f6bed; }
+.topic-card-status { font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+.topic-card-status.status-backlog { color: var(--backlog); }
+.topic-card-status.status-in_progress { color: var(--progress); }
+.topic-card-status.status-done { color: var(--done); }
+.topic-card-title { font-size: 1.12rem; font-weight: 800; line-height: 1.35; }
+.topic-card-stats { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 0.86rem; color: var(--muted); }
 .topic-card-stats .recent { margin-left: auto; }
-.stat-sep { color: #b9c0bc; }
+.stat-sep { color: #c6ccd2; }
+.topic-card-actions { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.pill {
+  border: none; border-radius: 999px; padding: 8px 16px; font-weight: 800; font-size: 0.88rem; cursor: pointer;
+  background: var(--issue-soft); color: var(--issue);
+}
+.pill.on { background: var(--issue); color: #fff; }
+.pill.proposal { background: #edf0fd; color: #4f6bed; }
+.pill.proposal.on { background: #4f6bed; color: #fff; }
+.pill:disabled { opacity: 0.7; }
 
 .list-pane { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
 .tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--line); border-radius: 10px; padding: 3px; }

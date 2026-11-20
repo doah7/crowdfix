@@ -59,6 +59,8 @@ class TopicSummary(BaseModel):
     report_count: int
     last_report_at: datetime
     created_at: datetime
+    # 로그인한 사용자가 누른 참여 버튼 (목록 카드의 버튼 표시용)
+    my_participations: list[str] = []
 
 
 class PhotoOut(BaseModel):

@@ -155,7 +155,7 @@ export function WritePage() {
             buildings={buildings}
             selected={building}
             onSelect={setBuildingId}
-            placeholder="건물 검색 (예: 디도, 248)"
+            placeholder="건물 검색 (예: 삼성학술정보관, 248)"
             invalid={!!errors.building_id}
           />
           {errors.building_id && <div className="field-error">{errors.building_id}</div>}
