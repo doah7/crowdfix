@@ -44,52 +44,59 @@ export function TopicCard({ topic, onUpdate }: { topic: TopicSummary; onUpdate?:
         <span className={`topic-card-status status-${topic.status}`}>{STATUS_LABEL[topic.status]}</span>
       </div>
       <div className="topic-card-title">{topic.title}</div>
-      <div className="topic-card-stats">
-        {topic.type === "issue" ? (
-          <>
-            <span>경험 {c.experienced}명</span>
-            <span className="stat-sep" aria-hidden>
-              |
-            </span>
-            <span>공감 {c.needs_improvement}명</span>
-          </>
-        ) : (
-          <span>지지 {c.want}명</span>
-        )}
-        <span className="recent">최근 Report {timeAgo(topic.last_report_at)}</span>
+      {/* 참여 버튼에 집계를 함께 보여준다 (예: '나도 겪었어요 3'). 오른쪽에 최근 Report 시각. */}
+      <div className="topic-card-actions">
+        <div className="topic-card-buttons" onClick={(e) => e.stopPropagation()}>
+          {topic.type === "issue" ? (
+            <>
+              <CountPill
+                label="나도 겪었어요"
+                count={c.experienced}
+                on={mine.includes("experienced")}
+                busy={busy !== null}
+                onClick={() => void toggle("experienced")}
+              />
+              <CountPill
+                label="개선이 필요해요"
+                count={c.needs_improvement}
+                on={mine.includes("needs_improvement")}
+                busy={busy !== null}
+                onClick={() => void toggle("needs_improvement")}
+              />
+            </>
+          ) : (
+            <CountPill
+              label="나도 원해요"
+              count={c.want}
+              proposal
+              on={mine.includes("want")}
+              busy={busy !== null}
+              onClick={() => void toggle("want")}
+            />
+          )}
+        </div>
+        <span className="recent">{timeAgo(topic.last_report_at)}</span>
       </div>
-      {topic.type === "proposal" && (
-        <div className="topic-card-actions" onClick={(e) => e.stopPropagation()}>
-          <button
-            className={`pill proposal ${mine.includes("want") ? "on" : ""}`}
-            aria-pressed={mine.includes("want")}
-            disabled={busy !== null}
-            onClick={() => void toggle("want")}
-          >
-            나도 원해요
-          </button>
-        </div>
-      )}
-      {topic.type === "issue" && (
-        <div className="topic-card-actions" onClick={(e) => e.stopPropagation()}>
-          <button
-            className={`pill ${mine.includes("experienced") ? "on" : ""}`}
-            aria-pressed={mine.includes("experienced")}
-            disabled={busy !== null}
-            onClick={() => void toggle("experienced")}
-          >
-            나도 겪었어요
-          </button>
-          <button
-            className={`pill ${mine.includes("needs_improvement") ? "on" : ""}`}
-            aria-pressed={mine.includes("needs_improvement")}
-            disabled={busy !== null}
-            onClick={() => void toggle("needs_improvement")}
-          >
-            개선이 필요해요
-          </button>
-        </div>
-      )}
     </article>
+  );
+}
+
+function CountPill(props: {
+  label: string;
+  count: number;
+  on: boolean;
+  busy: boolean;
+  proposal?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={`pill count-pill ${props.proposal ? "proposal" : ""} ${props.on ? "on" : ""}`}
+      aria-pressed={props.on}
+      disabled={props.busy}
+      onClick={props.onClick}
+    >
+      {props.label} <strong>{props.count}</strong>
+    </button>
   );
 }

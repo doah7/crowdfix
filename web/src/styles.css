@@ -476,3 +476,11 @@ p { margin: 0.25rem 0; }
 .write .similar-item { cursor: pointer; transition: border-color 0.15s ease; }
 .write .similar-item:hover { border-color: var(--brand); }
 .write .similar-item:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* ---------- 목록 카드: 집계를 버튼 안에, 버튼 폭 고정 ---------- */
+.topic-card-actions { align-items: center; justify-content: space-between; flex-wrap: nowrap; }
+.topic-card-buttons { display: flex; gap: 6px; }
+/* 숫자가 바뀌어도 버튼 크기는 그대로 (가운데 정렬이라 글자만 살짝 움직인다) */
+.count-pill { width: 124px; padding: 7px 0; text-align: center; white-space: nowrap; }
+.count-pill strong { margin-left: 2px; font-weight: 800; }
+.topic-card-actions .recent { font-size: 0.76rem; color: var(--muted); white-space: nowrap; margin-left: 8px; }
