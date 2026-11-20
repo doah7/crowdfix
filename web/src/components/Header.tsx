@@ -17,6 +17,7 @@ export function Header() {
   return (
     <header className="topbar">
       <Link to="/" className="topbar-brand">
+        <img src="/icon-192.png" alt="" className="topbar-icon" />
         CrowdFix
       </Link>
       <div className="topbar-right">

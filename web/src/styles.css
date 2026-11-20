@@ -4,9 +4,9 @@
   --ink: #1d2320;
   --muted: #66706b;
   --line: #e2e5e0;
-  --brand: #1f5c46;
+  --brand: #004483;
   --brand-ink: #ffffff;
-  --brand-soft: #e3efe9;
+  --brand-soft: #e4edf7;
   --issue: #c2410c;
   --issue-soft: #fdeee5;
   --proposal: #4338ca;
@@ -107,9 +107,10 @@ p { margin: 0.25rem 0; }
   background: var(--brand);
   color: var(--brand-ink);
 }
-.topbar-brand { font-weight: 800; font-size: 1.1rem; letter-spacing: -0.01em; }
+.topbar-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.01em; }
+.topbar-icon { width: 28px; height: 28px; border-radius: 7px; display: block; }
 .topbar-right { display: flex; align-items: center; gap: 10px; }
-.topbar .link-btn { color: #d7ebe1; font-size: 0.78rem; }
+.topbar .link-btn { color: #cfe0f2; font-size: 0.78rem; }
 .bell { position: relative; display: inline-flex; }
 .bell-count {
   position: absolute; top: -6px; right: -8px;
@@ -123,11 +124,7 @@ p { margin: 0.25rem 0; }
 .login-hero { text-align: center; padding: 24px 8px 8px; }
 .login-hero h1 { font-size: 1.8rem; margin-top: 12px; }
 .login-hero p { color: var(--muted); margin-top: 8px; line-height: 1.5; }
-.brand-mark {
-  width: 56px; height: 56px; margin: 0 auto; border-radius: 16px;
-  background: var(--brand); color: #fff; font-weight: 800; font-size: 1.2rem;
-  display: grid; place-items: center;
-}
+.brand-mark { width: 72px; height: 72px; margin: 0 auto; display: block; border-radius: 18px; box-shadow: 0 4px 14px rgba(0, 68, 131, 0.18); }
 .form { display: flex; flex-direction: column; gap: 12px; }
 .form label { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; font-weight: 600; }
 .form input {

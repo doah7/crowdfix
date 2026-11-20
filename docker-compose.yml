@@ -46,6 +46,7 @@ services:
     volumes:
       - ./web/src:/srv/src
       - ./web/index.html:/srv/index.html
+      - ./web/public:/srv/public
     ports:
       - "5173:5173"
     depends_on:
