@@ -121,7 +121,7 @@ export function Explore() {
           <MapPane
             loading={topics.state === "loading"}
             groups={groups}
-            allLocated={all.filter((t) => t.building)}
+            allTopics={all}
             building={building}
             focus={focus}
             mapFailed={mapFailed}
@@ -164,7 +164,7 @@ export function Explore() {
 function MapPane(props: {
   loading: boolean;
   groups: ReturnType<typeof groupByBuilding>;
-  allLocated: TopicSummary[];
+  allTopics: TopicSummary[];
   building: Building | null;
   focus: [number, number] | null;
   mapFailed: boolean;
@@ -175,7 +175,10 @@ function MapPane(props: {
   onUpdate: (t: TopicSummary) => void;
 }) {
   const { building } = props;
-  const shown = building ? props.allLocated.filter((t) => t.building?.id === building.id) : props.allLocated;
+  // 건물을 고르면 그 건물의 의제만. 아니면 위치 있는 의제 다음에 위치 없는 의제(Proposal)를 맨 아래에 둔다.
+  const shown = building
+    ? props.allTopics.filter((t) => t.building?.id === building.id)
+    : [...props.allTopics.filter((t) => t.building), ...props.allTopics.filter((t) => !t.building)];
 
   return (
     <>
