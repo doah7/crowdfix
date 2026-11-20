@@ -2,7 +2,7 @@
 
 A campus feedback platform for SKKU students: **CrowdFix** demo web app (Introduction to Software Engineering, Team 13)
 
-- 데모 범위·시연 시나리오: [docs/CrowdFix_데모범위_시나리오.md](docs/CrowdFix_데모범위_시나리오.md)
+- 데모 범위·시연 시나리오: [docs/demo-scope-and-scenario.md](docs/demo-scope-and-scenario.md)
 
 ## 실행
 
