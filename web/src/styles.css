@@ -536,3 +536,14 @@ p { margin: 0.25rem 0; }
 .detail-overlay.page-slide.leave { animation: overlay-out 0.24s ease-in both; }
 .detail-overlay.page-slide.leave .join-dock { opacity: 1; }
 .detail-overlay > .app-shell { background: #fff; }
+/* 넓은 화면(웹)에서도 상세가 가운데 앱 칸 밖에서 날아오지 않도록:
+   겹침 영역을 앱 칸 폭으로 맞추고, 그 안에서만 움직이며 칸 밖은 잘라 낸다 */
+.detail-overlay {
+  left: max(0px, calc((100% - var(--shell)) / 2));
+  width: min(100%, var(--shell));
+}
+.detail-overlay.page-slide.enter, .detail-overlay.page-slide.leave { animation: none; }
+.detail-overlay > .app-shell { position: relative; }
+.detail-overlay.page-slide.enter > .app-shell { animation: overlay-in 0.24s ease-out backwards; }
+.detail-overlay.page-slide.leave > .app-shell { animation: overlay-out 0.24s ease-in both; }
+.detail-overlay.page-slide.leave .join-dock { opacity: 0; transition: opacity 0.2s; }
