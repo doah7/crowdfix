@@ -140,15 +140,17 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
           {topic.type === "issue" ? (
             <>
               <JoinButton
+                emoji="✋"
                 label="나도 겪었어요"
-                count={`경험자 ${c.experienced}명`}
+                count={c.experienced}
                 on={topic.my_participations.includes("experienced")}
                 busy={pending === "experienced"}
                 onClick={() => toggle("experienced")}
               />
               <JoinButton
+                emoji="👍"
                 label="개선이 필요해요"
-                count={`개선 공감 ${c.needs_improvement}명`}
+                count={c.needs_improvement}
                 on={topic.my_participations.includes("needs_improvement")}
                 busy={pending === "needs_improvement"}
                 onClick={() => toggle("needs_improvement")}
@@ -156,8 +158,9 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
             </>
           ) : (
             <JoinButton
+              emoji="🙌"
               label="나도 원해요"
-              count={`제안 지지 ${c.want}명`}
+              count={c.want}
               on={topic.my_participations.includes("want")}
               busy={pending === "want"}
               onClick={() => toggle("want")}
@@ -230,19 +233,21 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
 }
 
 function JoinButton(props: {
+  emoji: string;
   label: string;
-  count: string;
+  count: number;
   on: boolean;
   busy: boolean;
   onClick: () => void;
 }) {
   return (
     <button className={`join ${props.on ? "on" : ""}`} aria-pressed={props.on} disabled={props.busy} onClick={props.onClick}>
-      <span className="join-label">
-        {props.on ? "✓ " : ""}
-        {props.label}
+      <span className="join-emoji" aria-hidden>
+        {props.emoji}
       </span>
-      <span className="join-count">{props.count}</span>
+      <span className="join-label">
+        {props.label} <strong className="join-count">{props.count}</strong>
+      </span>
     </button>
   );
 }
