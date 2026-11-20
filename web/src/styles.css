@@ -506,3 +506,16 @@ p { margin: 0.25rem 0; }
 @media (prefers-reduced-motion: reduce) {
   .page-slide.enter, .page-slide.leave, .page-zoom.enter, .page-zoom.leave { animation: none; }
 }
+
+/* ---------- 로딩 표시 ---------- */
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading { display: grid; place-items: center; padding: 28px 0; }
+.loading.overlay { position: absolute; inset: 0; z-index: 600; background: #f2f4f7; padding: 0; }
+.spinner {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 3px solid #dbe4ee; border-top-color: var(--brand);
+  animation: spin 0.8s linear infinite;
+}
+.map-box .map { opacity: 0; transition: opacity 0.25s ease; }
+.map-box.ready .map { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2s; } }

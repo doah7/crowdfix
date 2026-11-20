@@ -92,12 +92,14 @@ export function CampusMap({
   focus,
   onSelect,
   onTileError,
+  onReady,
 }: {
   groups: MarkerGroup[];
   selectedId: number | null;
   focus: [number, number] | null;
   onSelect: (buildingId: number) => void;
   onTileError: () => void;
+  onReady?: () => void;
 }) {
   const icons = useMemo(
     () => new Map(groups.map((g) => [g.buildingId, markerIcon(g, g.buildingId === selectedId)])),
@@ -111,7 +113,7 @@ export function CampusMap({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         maxZoom={19}
-        eventHandlers={{ tileerror: onTileError }}
+        eventHandlers={{ tileerror: onTileError, load: () => onReady?.() }}
       />
       {groups.map((g) => (
         <Marker

@@ -12,6 +12,15 @@ const STATUSES: Status[] = ["backlog", "in_progress", "done"];
 type Load<T> = { state: "loading" } | { state: "error" } | { state: "ok"; data: T };
 
 /**
+ * 마지막으로 받은 의제·건물 목록. 다른 화면에서 돌아왔을 때 빈 화면이나 '불러오는 중'으로
+ * 깜빡이지 않도록 이 값으로 먼저 그리고, 새 값은 뒤에서 받아 바꿔 끼운다.
+ */
+const cache: { topics: Map<string, TopicSummary[]>; buildings: Building[] | null } = {
+  topics: new Map(),
+  buildings: null,
+};
+
+/**
  * 탐색 화면 (지도·목록). 검색어·필터·선택은 URL에 두어 지도↔목록 전환이나
  * 상세 화면에서 돌아와도 유지된다 (REQ-UI-09).
  */
@@ -40,33 +49,51 @@ export function Explore() {
     [setParams],
   );
 
-  const [topics, setTopics] = useState<Load<TopicSummary[]>>({ state: "loading" });
-  const [buildings, setBuildings] = useState<Building[]>([]);
+  const statusKey = statusFilter.join(",");
+  const cacheKey = `${statusKey}|${sort}`;
+  const [topics, setTopics] = useState<Load<TopicSummary[]>>(() => {
+    const hit = cache.topics.get(cacheKey);
+    return hit ? { state: "ok", data: hit } : { state: "loading" };
+  });
+  const [buildings, setBuildings] = useState<Building[]>(cache.buildings ?? []);
   const [reloadKey, setReloadKey] = useState(0);
   const [mapFailed, setMapFailed] = useState(false);
 
-  const statusKey = statusFilter.join(",");
   useEffect(() => {
     let alive = true;
-    setTopics({ state: "loading" });
+    const hit = cache.topics.get(cacheKey);
+    setTopics(hit ? { state: "ok", data: hit } : { state: "loading" });
     const qs = new URLSearchParams({ sort });
     for (const s of statusKey.split(",").filter(Boolean)) qs.append("status", s);
     api<TopicSummary[]>(`/api/topics?${qs}`)
-      .then((data) => alive && setTopics({ state: "ok", data }))
-      .catch(() => alive && setTopics({ state: "error" }));
+      .then((data) => {
+        cache.topics.set(cacheKey, data);
+        if (alive) setTopics({ state: "ok", data });
+      })
+      .catch(() => alive && !hit && setTopics({ state: "error" }));
     return () => {
       alive = false;
     };
-  }, [statusKey, sort, reloadKey]);
+  }, [statusKey, sort, cacheKey, reloadKey]);
 
   useEffect(() => {
-    api<Building[]>("/api/buildings").then(setBuildings).catch(() => setBuildings([]));
+    api<Building[]>("/api/buildings")
+      .then((data) => {
+        cache.buildings = data;
+        setBuildings(data);
+      })
+      .catch(() => setBuildings(cache.buildings ?? []));
   }, []);
 
   const all = topics.state === "ok" ? topics.data : [];
   // 카드에서 참여 버튼을 누르면 그 의제만 바꿔 끼워, 지도 마커 인원도 함께 갱신한다
   const replaceTopic = (t: TopicSummary) =>
-    setTopics((prev) => (prev.state === "ok" ? { state: "ok", data: prev.data.map((x) => (x.id === t.id ? t : x)) } : prev));
+    setTopics((prev) => {
+      if (prev.state !== "ok") return prev;
+      const data = prev.data.map((x) => (x.id === t.id ? t : x));
+      cache.topics.set(cacheKey, data);
+      return { state: "ok", data };
+    });
   const groups = useMemo(() => groupByBuilding(all), [all]);
   const building = buildings.find((b) => b.id === selectedBuilding) ?? null;
   const focus = useMemo<[number, number] | null>(
@@ -175,6 +202,12 @@ function MapPane(props: {
   onUpdate: (t: TopicSummary) => void;
 }) {
   const { building } = props;
+  // 지도 타일이 다 그려질 때까지 로딩 표시를 보여주고, 다 되면 지도를 부드럽게 띄운다
+  const [mapReady, setMapReady] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMapReady(true), 2500); // 타일 응답이 늦어도 화면은 보여준다
+    return () => clearTimeout(t);
+  }, []);
   // 건물을 고르면 그 건물의 의제만. 아니면 위치 있는 의제 다음에 위치 없는 의제(Proposal)를 맨 아래에 둔다.
   const shown = building
     ? props.allTopics.filter((t) => t.building?.id === building.id)
@@ -182,13 +215,15 @@ function MapPane(props: {
 
   return (
     <>
-      <div className="map-box">
+      <div className={`map-box ${mapReady ? "ready" : ""}`}>
+        {!mapReady && <Spinner overlay />}
         <CampusMap
           groups={props.groups}
           selectedId={building?.id ?? null}
           focus={props.focus}
           onSelect={props.onSelect}
           onTileError={props.onTileError}
+          onReady={() => setMapReady(true)}
         />
         {props.mapFailed && (
           // 지도를 불러오지 못하면 목록으로 전환할 수 있게 한다 (FR-NAV-14)
@@ -211,7 +246,7 @@ function MapPane(props: {
           </div>
         )}
         {props.loading ? (
-          <p className="muted">불러오는 중…</p>
+          <Spinner />
         ) : shown.length === 0 ? (
           <EmptyPlace building={building} />
         ) : (
@@ -273,7 +308,7 @@ function ListPane(props: {
         </select>
       </div>
       {props.loading ? (
-        <p className="muted">불러오는 중…</p>
+        <Spinner />
       ) : props.topics.length === 0 ? (
         props.building ? (
           <EmptyPlace building={props.building} />
@@ -331,5 +366,13 @@ function WriteFab({ to }: { to: string }) {
         <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
       </svg>
     </Link>
+  );
+}
+
+function Spinner({ overlay = false }: { overlay?: boolean }) {
+  return (
+    <div className={`loading ${overlay ? "overlay" : ""}`} role="status" aria-label="불러오는 중">
+      <span className="spinner" />
+    </div>
   );
 }
