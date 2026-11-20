@@ -12,6 +12,7 @@ import {
 } from "../api";
 import { BuildingSearch } from "../components/BuildingSearch";
 import { Header } from "../components/Header";
+import { usePageTransition } from "../pageTransition";
 import { placeLabel } from "../labels";
 
 // 사진 제한 (데모 문서 TBD-09). 서버에서도 같은 기준으로 다시 검사한다.
@@ -68,6 +69,8 @@ export function WritePage() {
   const requestId = useRef(draft?.requestId ?? newRequestId());
   const fileInput = useRef<HTMLInputElement>(null);
   const [similar, setSimilar] = useState<Similar>(draft?.similar ?? { state: "idle" });
+  // 글쓰기: 가운데에서 퍼지며 열리고, 닫을 때는 가운데로 모이며 사라진다
+  const { phase, leave } = usePageTransition();
 
   // 추천 후보 칸을 누르면 쓰던 글을 맡겨 두고 그 의제의 상세 화면으로 간다
   function openCandidate(topicId: number) {
@@ -169,10 +172,10 @@ export function WritePage() {
   }
 
   return (
-    <div className="app-shell write">
+    <div className={`app-shell write page-zoom ${phase}`}>
       <Header />
       <div className="detail-bar divider">
-        <button className="detail-back" onClick={() => navigate(-1)}>
+        <button className="detail-back" onClick={() => leave(() => navigate(-1))}>
           ← 취소
         </button>
       </div>

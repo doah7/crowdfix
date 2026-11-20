@@ -485,3 +485,21 @@ p { margin: 0.25rem 0; }
 .count-pill strong { margin-left: 2px; font-weight: 800; }
 .topic-card-actions .recent { font-size: 0.76rem; color: var(--muted); white-space: nowrap; margin-left: 8px; }
 .join-pill strong { margin-left: 3px; font-weight: 800; }
+
+/* ---------- 화면 전환 효과 ---------- */
+/* 상세: left 값으로 밀어 넣는다 (transform을 쓰면 아래 고정 버튼 바의 위치 기준이 바뀌어서) */
+@keyframes slide-in-from-left { from { left: -100%; opacity: 0.6; } to { left: 0; opacity: 1; } }
+@keyframes slide-out-to-left { from { left: 0; opacity: 1; } to { left: -100%; opacity: 0.6; } }
+.page-slide { position: relative; }
+.page-slide.enter { animation: slide-in-from-left 0.24s ease-out backwards; }
+.page-slide.leave { animation: slide-out-to-left 0.24s ease-in both; }
+.page-slide.enter .join-dock, .page-slide.leave .join-dock { transition: opacity 0.2s; }
+.page-slide.leave .join-dock { opacity: 0; }
+/* 글쓰기: 가운데에서 퍼지듯 열리고, 반대로 닫힌다 */
+@keyframes zoom-in-center { from { transform: scale(0.86); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes zoom-out-center { from { transform: none; opacity: 1; } to { transform: scale(0.86); opacity: 0; } }
+.page-zoom.enter { animation: zoom-in-center 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; transform-origin: 50% 40%; }
+.page-zoom.leave { animation: zoom-out-center 0.24s ease-in both; transform-origin: 50% 40%; }
+@media (prefers-reduced-motion: reduce) {
+  .page-slide.enter, .page-slide.leave, .page-zoom.enter, .page-zoom.leave { animation: none; }
+}

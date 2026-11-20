@@ -10,6 +10,7 @@ import {
   type TopicDetail,
 } from "../api";
 import { Header } from "../components/Header";
+import { usePageTransition } from "../pageTransition";
 import {
   DELIVERY_LABEL,
   RESULT_LABEL,
@@ -42,7 +43,9 @@ export function TopicDetailPage() {
       .catch((e) => setError(e instanceof ApiError && e.status === 404 ? "not_found" : "failed"));
   }, [id]);
 
-  const back = () => (window.history.length > 1 ? navigate(-1) : navigate("/"));
+  // 상세 화면: 왼쪽에서 오른쪽으로 들어오고, 닫을 때는 왼쪽으로 빠진다
+  const { phase, leave } = usePageTransition();
+  const back = () => leave(() => (window.history.length > 1 ? navigate(-1) : navigate("/")));
 
   async function toggleSubscribe() {
     if (!topic || pending) return;
@@ -58,7 +61,7 @@ export function TopicDetailPage() {
   }
 
   return (
-    <div className="app-shell detail">
+    <div className={`app-shell detail page-slide ${phase}`}>
       <Header />
       <div className="detail-bar">
         <button className="detail-back" onClick={back}>
