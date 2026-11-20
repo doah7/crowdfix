@@ -2,6 +2,8 @@
 
 A campus feedback platform for SKKU students: **CrowdFix** demo web app (Introduction to Software Engineering, Team 13)
 
+- 데모 범위·시연 시나리오: [docs/CrowdFix_데모범위_시나리오.md](docs/CrowdFix_데모범위_시나리오.md)
+
 ## 실행
 
 [Docker Desktop](https://www.docker.com/products/docker-desktop/)만 있으면 됩니다. 첫 빌드는 AI 모델 포함으로 10분 안팎 걸립니다.
