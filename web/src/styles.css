@@ -547,3 +547,17 @@ p { margin: 0.25rem 0; }
 .detail-overlay.page-slide.enter > .app-shell { animation: overlay-in 0.24s ease-out backwards; }
 .detail-overlay.page-slide.leave > .app-shell { animation: overlay-out 0.24s ease-in both; }
 .detail-overlay.page-slide.leave .join-dock { opacity: 0; transition: opacity 0.2s; }
+/* 글쓰기 시작 효과: 가운데에서 원이 퍼지듯 열리고(clip-path), 닫을 때는 가운데로 모인다.
+   clip-path라 앱 칸 밖으로는 절대 그려지지 않는다 */
+@keyframes write-open {
+  from { clip-path: circle(0% at 50% 45%); opacity: 0.4; }
+  to { clip-path: circle(120% at 50% 45%); opacity: 1; }
+}
+@keyframes write-close {
+  from { clip-path: circle(120% at 50% 45%); opacity: 1; }
+  to { clip-path: circle(0% at 50% 45%); opacity: 0.4; }
+}
+.page-zoom.enter { animation: write-open 0.34s cubic-bezier(0.3, 0.7, 0.2, 1) backwards; }
+.page-zoom.leave { animation: write-close 0.12s ease-in both; }
+.app-shell.write { overflow: clip; }
+@media (prefers-reduced-motion: reduce) { .page-zoom.enter, .page-zoom.leave { animation: none; } }

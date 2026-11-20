@@ -1,5 +1,6 @@
-import { Navigate, Route, Routes, useLocation, type Location } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigationType, type Location } from "react-router-dom";
 import { useAuth } from "./auth";
+import { NavTypeContext } from "./pageTransition";
 import { Explore } from "./pages/Explore";
 import { Login } from "./pages/Login";
 import { TopicDetailPage } from "./pages/TopicDetail";
@@ -8,6 +9,7 @@ import { WritePage } from "./pages/Write";
 export function App() {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const navType = useNavigationType();
 
   if (loading) return <div className="app-shell center muted">불러오는 중…</div>;
 
@@ -23,7 +25,7 @@ export function App() {
   const background = (location.state as { background?: Location } | null)?.background;
 
   return (
-    <>
+    <NavTypeContext.Provider value={navType}>
       <Routes location={background ?? location}>
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/" element={<Explore />} />
@@ -36,6 +38,6 @@ export function App() {
           <Route path="/topics/:id" element={<TopicDetailPage overlay />} />
         </Routes>
       )}
-    </>
+    </NavTypeContext.Provider>
   );
 }

@@ -1,5 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigationType } from "react-router-dom";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import type { NavigationType } from "react-router-dom";
+
+/**
+ * 실제 이동 방식(PUSH/REPLACE/POP). App에서 Routes 바깥의 값을 내려준다.
+ * <Routes location={...}>(상세를 겹쳐 띄우는 라우팅) 안에서는 useNavigationType()이
+ * 항상 POP을 돌려주기 때문에 직접 쓰지 않는다.
+ */
+export const NavTypeContext = createContext<NavigationType | `${NavigationType}`>("POP");
 
 /** 화면 전환 효과 길이(ms). styles.css의 page-* 애니메이션과 맞춘다. */
 export const PAGE_TRANSITION_MS = 240;
@@ -14,7 +21,7 @@ function prefersReducedMotion(): boolean {
  * - 나갈 때: leave(fn)으로 효과를 보여준 뒤 fn(이동)을 실행
  */
 export function usePageTransition(leaveMs: number = PAGE_TRANSITION_MS) {
-  const navType = useNavigationType();
+  const navType = useContext(NavTypeContext);
   const [entering] = useState(() => navType !== "POP" && !prefersReducedMotion());
   const [leaving, setLeaving] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>();
