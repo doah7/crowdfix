@@ -208,13 +208,13 @@ p { margin: 0.25rem 0; }
 .topic-card-status.status-backlog { color: var(--backlog); }
 .topic-card-status.status-in_progress { color: var(--progress); }
 .topic-card-status.status-done { color: var(--done); }
-.topic-card-title { font-size: 1.12rem; font-weight: 800; line-height: 1.35; }
-.topic-card-stats { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 0.86rem; color: var(--muted); }
+.topic-card-title { font-size: 1rem; font-weight: 800; line-height: 1.35; }
+.topic-card-stats { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 0.78rem; color: var(--muted); }
 .topic-card-stats .recent { margin-left: auto; }
 .stat-sep { color: #c6ccd2; }
-.topic-card-actions { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.topic-card-actions { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
 .pill {
-  border: none; border-radius: 999px; padding: 8px 16px; font-weight: 800; font-size: 0.88rem; cursor: pointer;
+  border: none; border-radius: 999px; padding: 6px 12px; font-weight: 800; font-size: 0.78rem; cursor: pointer;
   background: var(--issue-soft); color: var(--issue);
 }
 .pill.on { background: var(--issue); color: #fff; }
