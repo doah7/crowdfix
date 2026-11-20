@@ -161,7 +161,7 @@ p { margin: 0.25rem 0; }
   border: 1px solid var(--line); background: #fff; border-radius: 999px;
   padding: 6px 11px; font-size: 0.8rem; white-space: nowrap; cursor: pointer;
 }
-.filter-chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.filter-chip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
 /* 상태 필터는 상세 화면의 상태 알약과 같은 색 조합으로 선택 표시 */
 .filter-chip.status-backlog.on { background: var(--backlog-soft); color: var(--backlog); border-color: transparent; font-weight: 800; }
 .filter-chip.status-in_progress.on { background: #e8eefc; color: #3b63d9; border-color: transparent; font-weight: 800; }
