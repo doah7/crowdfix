@@ -108,8 +108,8 @@ p { margin: 0.25rem 0; }
   color: var(--brand-ink);
 }
 /* 로고 글씨 'CrowdFix' 전용 글씨체 */
-/* 숫자 전용 글씨체: 가로가 좁고 세로가 긴 Oswald */
-.num, .pin-count, .stat-n { font-family: "Oswald", system-ui, sans-serif; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* 숫자 전용 글씨체: 가로가 좁고 세로가 긴 Barlow Condensed */
+.num, .pin-count, .stat-n { font-family: "Barlow Condensed", system-ui, sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
 .wordmark { font-family: "Outfit", var(--font-fallback, system-ui), sans-serif; font-weight: 700; letter-spacing: -0.01em; }
 .topbar-brand { display: inline-flex; align-items: center; gap: 8px; font-size: 1.2rem; }
 .topbar-icon { width: 28px; height: 28px; border-radius: 7px; display: block; }
