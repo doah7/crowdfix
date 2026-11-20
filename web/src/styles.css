@@ -445,9 +445,11 @@ p { margin: 0.25rem 0; }
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 1000;
   width: 100%; max-width: var(--shell);
   padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-  background: #fff; border-top: 1px solid var(--line);
+  background: #fff;
+  /* 구분선 대신, 바 바로 위가 진하고 위로 갈수록 옅어지는 약한 그림자 */
+  box-shadow: 0 -10px 16px -8px rgba(0, 0, 0, 0.12);
 }
 .join-dock.join-row { display: grid; }
 /* 완료된 의제: 고정 영역 전체를 '진행 중' 색으로 채운다 */
-.join-dock.done { background: #e8eefc; border-top: none; padding-top: 18px; padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+.join-dock.done { background: #e8eefc; box-shadow: none; padding-top: 18px; padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
 .done-note { text-align: center; font-weight: 800; font-size: 0.95rem; color: #3b63d9; }
