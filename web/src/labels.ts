@@ -51,7 +51,13 @@ export function formatDateTime(iso: string): string {
   });
 }
 
-export function placeLabel(t: { building: { name_ko: string } | null; floor: string | null }): string {
+export function placeLabel(t: {
+  building: { name_ko: string } | null;
+  floor: string | null;
+  room?: string | null;
+}): string {
   if (!t.building) return "위치 없음";
-  return t.floor ? `${t.building.name_ko} ${t.floor}` : t.building.name_ko;
+  // 강의실 번호가 있으면 층 대신 번호를 쓴다 (예: 제1공학관21동 21115)
+  const detail = t.room ?? t.floor;
+  return detail ? `${t.building.name_ko} ${detail}` : t.building.name_ko;
 }

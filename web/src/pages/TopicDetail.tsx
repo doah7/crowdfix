@@ -23,7 +23,7 @@ import {
 
 /**
  * 의제 상세 (REQ-UI-11 배치 순서):
- * 유형·장소·제목 → 처리 상태·전달 상태 → 참여 집계 → 연결된 Report·댓글 → 처리 이력
+ * 유형·장소·제목 → 처리 상태·전달 상태 → 참여 집계 → 연결된 Report·댓글 → 참여 버튼 → 처리 이력
  */
 export function TopicDetailPage() {
   const { id } = useParams();
@@ -32,6 +32,7 @@ export function TopicDetailPage() {
   const registered = (location.state as { registered?: string } | null)?.registered ?? null;
   const [topic, setTopic] = useState<TopicDetail | null>(null);
   const [error, setError] = useState<"not_found" | "failed" | null>(null);
+  const [pending, setPending] = useState<string | null>(null);
 
   useEffect(() => {
     setTopic(null);
@@ -43,13 +44,36 @@ export function TopicDetailPage() {
 
   const back = () => (window.history.length > 1 ? navigate(-1) : navigate("/"));
 
+  async function toggleSubscribe() {
+    if (!topic || pending) return;
+    setPending("sub");
+    try {
+      const st = await setSubscription(topic.id, !topic.subscribed);
+      setTopic({ ...topic, ...st });
+    } catch {
+      /* 그대로 둔다 */
+    } finally {
+      setPending(null);
+    }
+  }
+
   return (
     <div className="app-shell detail">
       <Header />
-      <div className="detail-nav">
-        <button className="link-btn" onClick={back}>
-          ← 뒤로
+      <div className="detail-bar">
+        <button className="detail-back" onClick={back}>
+          ← 의제 상세
         </button>
+        {topic && (
+          <button
+            className={`subscribe ${topic.subscribed ? "on" : ""}`}
+            aria-pressed={topic.subscribed}
+            disabled={pending !== null}
+            onClick={() => void toggleSubscribe()}
+          >
+            {topic.subscribed ? "🔔 구독 중" : "구독"}
+          </button>
+        )}
       </div>
 
       {error === "not_found" && <div className="state-box">더 이상 확인할 수 없는 의제예요.</div>}
@@ -61,9 +85,7 @@ export function TopicDetailPage() {
           {registered === "new_topic" ? "새 의제로 등록했어요." : "기존 의제에 내 글을 연결했어요."}
         </div>
       )}
-      {topic && (
-        <DetailBody topic={topic} onState={(st) => setTopic({ ...topic, ...st, counts: st.counts })} />
-      )}
+      {topic && <DetailBody topic={topic} onState={(st) => setTopic({ ...topic, ...st, counts: st.counts })} />}
     </div>
   );
 }
@@ -73,12 +95,12 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
   const [pending, setPending] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  async function run(key: string, fn: () => Promise<ParticipationState>) {
+  async function toggle(kind: ParticipationKind) {
     if (pending) return;
-    setPending(key);
+    setPending(kind);
     setActionError(null);
     try {
-      onState(await fn());
+      onState(await setParticipation(topic.id, kind, !topic.my_participations.includes(kind)));
     } catch {
       setActionError("요청을 처리하지 못했어요. 다시 눌러 주세요.");
     } finally {
@@ -86,115 +108,73 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
     }
   }
 
-  const toggle = (kind: ParticipationKind) =>
-    run(kind, () => setParticipation(topic.id, kind, !topic.my_participations.includes(kind)));
-  const latestDone = [...topic.history].reverse().find((h) => h.to_status === "done");
+  const done = [...topic.history].reverse().find((h) => h.to_status === "done");
+  const tiles =
+    topic.type === "issue"
+      ? [
+          { n: c.experienced, label: "경험", accent: true },
+          { n: c.needs_improvement, label: "공감", accent: true },
+          { n: topic.report_count, label: "연결 글", accent: false },
+        ]
+      : [
+          { n: c.want, label: "지지", accent: true },
+          { n: topic.report_count, label: "연결 글", accent: false },
+        ];
 
   return (
     <main className="detail-body">
-      <section className="detail-head">
-        <div className="row gap">
-          <span className={`chip type-${topic.type}`}>{TYPE_LABEL[topic.type]}</span>
-        </div>
-        <div className="muted small">{placeLabel(topic)}</div>
-        <div className="title-row">
-          <h1>{topic.title}</h1>
-          <button
-            className={`btn small subscribe ${topic.subscribed ? "on" : ""}`}
-            aria-pressed={topic.subscribed}
-            disabled={pending !== null}
-            onClick={() => run("sub", () => setSubscription(topic.id, !topic.subscribed))}
-          >
-            {topic.subscribed ? "🔔 구독 중" : "구독"}
-          </button>
-        </div>
-        {topic.summary && topic.summary !== topic.title && <p className="muted">{topic.summary}</p>}
-      </section>
+      <span className={`kind-pill ${topic.type}`}>
+        {TYPE_LABEL[topic.type].toUpperCase()} · {placeLabel(topic)}
+      </span>
+      <h1 className="detail-title">{topic.title}</h1>
 
-      {/* 처리 상태와 전달 상태는 각각 별도 줄로 표시한다 (REQ-UI-13) */}
-      <section className="card status-card">
-        <div className="kv">
-          <span className="k">처리 상태</span>
-          <span className={`chip status-${topic.status}`}>{STATUS_LABEL[topic.status]}</span>
+      {/* 처리 상태와 전달 상태를 구분해 함께 보여준다 (REQ-UI-13) */}
+      <div className="detail-status">
+        <span className={`status-pill status-${topic.status}`}>{STATUS_LABEL[topic.status]}</span>
+        <span className={`status-pill delivery delivery-${topic.delivery_status}`}>
+          {DELIVERY_LABEL[topic.delivery_status]}
+        </span>
+        <span className="muted small">최근 Report {timeAgo(topic.last_report_at)}</span>
+      </div>
+
+      {topic.status === "done" && topic.result && (
+        <div className="result-box">
+          <strong>{RESULT_LABEL[topic.result] ?? topic.result}</strong>
+          {topic.result_reason && <span> · {topic.result_reason}</span>}
+          {done && <div className="muted small">{formatDateTime(done.created_at)}</div>}
         </div>
-        <div className="kv">
-          <span className="k">전달 상태</span>
-          <span className={`chip delivery-${topic.delivery_status}`}>{DELIVERY_LABEL[topic.delivery_status]}</span>
-        </div>
-        {topic.status === "done" && topic.result && (
-          <div className="result-box">
-            <div className="kv">
-              <span className="k">처리 결과</span>
-              <strong>{RESULT_LABEL[topic.result] ?? topic.result}</strong>
-            </div>
-            {topic.result_reason && <p>{topic.result_reason}</p>}
-            {latestDone && <p className="muted small">{formatDateTime(latestDone.created_at)} 공개</p>}
+      )}
+
+      <div className={`stat-tiles n${tiles.length}`}>
+        {tiles.map((t) => (
+          <div key={t.label} className="stat-tile">
+            <div className={`stat-n ${t.accent ? "accent" : ""} ${topic.type}`}>{t.n}</div>
+            <div className="stat-label">{t.label}</div>
           </div>
-        )}
-      </section>
+        ))}
+      </div>
+      <div className="unique-line">
+        고유 참여 <strong>{c.unique}명</strong>
+        <span className="muted"> · 전달 기준 {topic.threshold}명</span>
+      </div>
 
-      <section className="card">
-        <h2>참여</h2>
-        {/* 참여 버튼: 본인의 선택 여부와 집계를 함께 표시한다 (REQ-UI-12) */}
-        <div className="join-buttons">
-          {topic.type === "issue" ? (
-            <>
-              <JoinButton
-                emoji="✋"
-                label="나도 겪었어요"
-                count={c.experienced}
-                on={topic.my_participations.includes("experienced")}
-                busy={pending === "experienced"}
-                onClick={() => toggle("experienced")}
-              />
-              <JoinButton
-                emoji="👍"
-                label="개선이 필요해요"
-                count={c.needs_improvement}
-                on={topic.my_participations.includes("needs_improvement")}
-                busy={pending === "needs_improvement"}
-                onClick={() => toggle("needs_improvement")}
-              />
-            </>
-          ) : (
-            <JoinButton
-              emoji="🙌"
-              label="나도 원해요"
-              count={c.want}
-              on={topic.my_participations.includes("want")}
-              busy={pending === "want"}
-              onClick={() => toggle("want")}
-            />
-          )}
-        </div>
-        <div className="unique-row">
-          <span>
-            고유 참여 <strong>{c.unique}명</strong>
-          </span>
-          <span className="muted small">전달 기준 {topic.threshold}명</span>
-        </div>
-        {actionError && <div className="field-error">{actionError}</div>}
-      </section>
-
-      <section className="card">
-        <div className="row between">
-          <h2>연결된 Report {topic.report_count}건</h2>
+      <section>
+        <div className="section-head">
+          <h2>연결된 Report</h2>
           {/* 데모 범위: 댓글은 아이콘만 표시한다 (데모 문서 4.1) */}
           <span className="comment-icon" aria-label="댓글" title="댓글">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
             댓글
           </span>
         </div>
-        <ul className="report-list">
+        <ul className="report-boxes">
           {topic.reports.map((r) => (
-            <li key={r.id}>
-              <div className="row between">
-                <strong>{r.title}</strong>
-                <span className="muted small">{timeAgo(r.created_at)}</span>
+            <li key={r.id} className="report-box">
+              <div>
+                “{r.body}”{r.photos.length > 0 && <span className="muted"> · 사진 {r.photos.length}</span>}
               </div>
-              <p>{r.body}</p>
               {r.photos.length > 0 && (
                 <div className="thumbs">
                   {r.photos.map((p) => (
@@ -204,26 +184,48 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
                   ))}
                 </div>
               )}
-              {r.is_mine && <span className="chip mine">내 글</span>}
+              <div className="report-meta">
+                {r.is_mine && <span className="mine-tag">내 글</span>}
+                {timeAgo(r.created_at)}
+              </div>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="card">
-        <h2>처리 이력</h2>
-        <ol className="timeline">
+      {/* 참여 버튼: 본인의 선택 여부를 버튼에 표시한다 (REQ-UI-12) */}
+      <div className={`join-row ${topic.type}`}>
+        {topic.type === "issue" ? (
+          <>
+            <JoinPill label="✋ 나도 겪었어요" on={topic.my_participations.includes("experienced")}
+              busy={pending !== null} onClick={() => void toggle("experienced")} />
+            <JoinPill label="👍 개선이 필요해요" on={topic.my_participations.includes("needs_improvement")}
+              busy={pending !== null} onClick={() => void toggle("needs_improvement")} />
+          </>
+        ) : (
+          <JoinPill label="🙌 나도 원해요" on={topic.my_participations.includes("want")} proposal
+            busy={pending !== null} onClick={() => void toggle("want")} />
+        )}
+      </div>
+      {actionError && <div className="field-error">{actionError}</div>}
+
+      <section>
+        <div className="section-head">
+          <h2>처리 이력</h2>
+        </div>
+        <ol className="history">
           {topic.history.map((h, i) => (
-            <li key={i}>
-              <div className="small muted">
+            <li key={i} className={`status-${h.to_status}`}>
+              <span className="history-dot" aria-hidden />
+              <div className="history-when">
                 {formatDateTime(h.created_at)} · {ROLE_LABEL[h.actor_role] ?? h.actor_role}
               </div>
-              <div>
+              <div className="history-what">
                 {h.from_status ? `${STATUS_LABEL[h.from_status]} → ` : ""}
                 <strong>{STATUS_LABEL[h.to_status]}</strong>
                 {h.result && ` · ${RESULT_LABEL[h.result] ?? h.result}`}
               </div>
-              {h.reason && <div className="small">{h.reason}</div>}
+              {h.reason && <div className="history-reason">{h.reason}</div>}
             </li>
           ))}
         </ol>
@@ -232,22 +234,15 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
   );
 }
 
-function JoinButton(props: {
-  emoji: string;
-  label: string;
-  count: number;
-  on: boolean;
-  busy: boolean;
-  onClick: () => void;
-}) {
+function JoinPill(props: { label: string; on: boolean; busy: boolean; proposal?: boolean; onClick: () => void }) {
   return (
-    <button className={`join ${props.on ? "on" : ""}`} aria-pressed={props.on} disabled={props.busy} onClick={props.onClick}>
-      <span className="join-emoji" aria-hidden>
-        {props.emoji}
-      </span>
-      <span className="join-label">
-        {props.label} <strong className="join-count">{props.count}</strong>
-      </span>
+    <button
+      className={`join-pill ${props.proposal ? "proposal" : ""} ${props.on ? "on" : ""}`}
+      aria-pressed={props.on}
+      disabled={props.busy}
+      onClick={props.onClick}
+    >
+      {props.label}
     </button>
   );
 }

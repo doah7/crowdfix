@@ -55,6 +55,7 @@ class TopicSummary(BaseModel):
     delivery_status: str
     building: BuildingRef | None
     floor: str | None
+    room: str | None = None
     counts: Counts
     report_count: int
     last_report_at: datetime

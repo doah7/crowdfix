@@ -39,6 +39,7 @@ export interface TopicSummary {
   delivery_status: DeliveryStatus;
   building: Pick<Building, "id" | "name_ko" | "name_en" | "latitude" | "longitude"> | null;
   floor: string | null;
+  room?: string | null;
   counts: Counts;
   report_count: number;
   last_report_at: string;

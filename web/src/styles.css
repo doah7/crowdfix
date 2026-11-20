@@ -339,3 +339,65 @@ p { margin: 0.25rem 0; }
   transition: transform 0.25s ease, opacity 0.25s ease;
 }
 .fab-write.hidden { transform: translateY(96px); pointer-events: none; }
+
+/* ---------- 의제 상세 (시안 디자인) ---------- */
+.detail-bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 4px; }
+.detail-back { background: none; border: none; padding: 0; font-weight: 800; font-size: 1rem; color: var(--muted); cursor: pointer; }
+.subscribe {
+  border: 1.5px solid #e6e8eb; background: #fff; border-radius: 999px; padding: 6px 12px;
+  font-size: 0.8rem; font-weight: 700; cursor: pointer;
+}
+.subscribe.on { background: var(--brand-soft); color: var(--brand); border-color: transparent; }
+.detail .detail-body { padding: 10px 16px 40px; gap: 14px; }
+.kind-pill {
+  align-self: flex-start; border-radius: 999px; padding: 6px 14px; font-size: 0.82rem; font-weight: 800;
+  background: var(--issue-soft); color: var(--issue);
+}
+.kind-pill.proposal { background: #edf0fd; color: #4f6bed; }
+.detail-title { font-size: 1.4rem; font-weight: 800; line-height: 1.35; }
+.detail-status { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; }
+.status-pill { border-radius: 999px; padding: 5px 12px; font-size: 0.8rem; font-weight: 800; }
+.status-pill.status-backlog { background: var(--backlog-soft); color: var(--backlog); }
+.status-pill.status-in_progress { background: #e8eefc; color: #3b63d9; }
+.status-pill.status-done { background: var(--done-soft); color: var(--done); }
+.status-pill.delivery { background: #fff; border: 1.5px solid #e6e8eb; color: var(--muted); padding: 4px 11px; }
+.status-pill.delivery-sent { color: var(--brand); border-color: #c9d8ea; }
+.status-pill.delivery-failed { color: var(--danger); }
+.detail .result-box { margin: 0; }
+.stat-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat-tiles.n2 { grid-template-columns: repeat(2, 1fr); }
+.stat-tile { background: #f2f3f5; border-radius: 14px; padding: 12px 14px; }
+.stat-n { font-size: 1.6rem; font-weight: 800; line-height: 1.2; }
+.stat-n.accent { color: var(--issue); }
+.stat-n.accent.proposal { color: #4f6bed; }
+.stat-label { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+.unique-line { font-size: 0.85rem; margin-top: -6px; }
+.section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.section-head h2 { font-size: 0.95rem; color: #4a5258; }
+.report-boxes { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.report-box { border: 1.5px solid #e6e8eb; border-radius: 14px; padding: 12px 14px; line-height: 1.5; font-size: 0.92rem; }
+.report-box .thumbs { margin-top: 8px; }
+.report-meta { margin-top: 4px; font-size: 0.75rem; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.mine-tag { background: var(--brand-soft); color: var(--brand); border-radius: 6px; padding: 1px 6px; font-weight: 700; }
+.join-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.join-row.proposal { grid-template-columns: 1fr; }
+.join-pill {
+  border: none; border-radius: 999px; padding: 13px 10px; font-weight: 800; font-size: 0.92rem; cursor: pointer;
+  background: var(--issue-soft); color: var(--issue);
+}
+.join-pill.on { background: var(--issue); color: #fff; }
+.join-pill.proposal { background: #edf0fd; color: #4f6bed; }
+.join-pill.proposal.on { background: #4f6bed; color: #fff; }
+.join-pill:disabled { opacity: 0.75; }
+.history { list-style: none; margin: 0; padding: 0 0 0 4px; }
+.history li { position: relative; padding: 0 0 16px 22px; border-left: 2px solid #e6e8eb; margin-left: 6px; }
+.history li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.history-dot {
+  position: absolute; left: -8px; top: 2px; width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; border: 3px solid var(--backlog);
+}
+.history li.status-in_progress .history-dot { border-color: #3b63d9; }
+.history li.status-done .history-dot { border-color: var(--done); }
+.history-when { font-size: 0.75rem; color: var(--muted); }
+.history-what { font-size: 0.9rem; margin-top: 2px; }
+.history-reason { font-size: 0.84rem; color: #4a5258; margin-top: 4px; background: #f6f7f8; border-radius: 8px; padding: 6px 10px; display: inline-block; }

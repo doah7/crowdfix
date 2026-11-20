@@ -61,6 +61,7 @@ def to_summary(topic: m.Topic, counts: Counts, n_reports: int) -> dict:
         building=BuildingRef(id=b.id, name_ko=b.name_ko, name_en=b.name_en,
                              latitude=b.latitude, longitude=b.longitude) if b else None,
         floor=topic.floor,
+        room=topic.room,
         counts=counts,
         report_count=n_reports,
         last_report_at=topic.last_report_at,

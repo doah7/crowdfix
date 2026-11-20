@@ -84,6 +84,8 @@ class Topic(TimestampMixin, Base):
     category: Mapped[str | None] = mapped_column(String(50))  # 담당 조직 연결표 매칭용
     building_id: Mapped[int | None] = mapped_column(ForeignKey("buildings.id"))
     floor: Mapped[str | None] = mapped_column(String(30))
+    # 강의실·호실 번호. 예: 21232 = 21동 2층 32호 (B는 지하)
+    room: Mapped[str | None] = mapped_column(String(10))
     status: Mapped[str] = mapped_column(String(20), default="backlog")
     delivery_status: Mapped[str] = mapped_column(String(20), default="not_sent")
     result: Mapped[str | None] = mapped_column(String(30))

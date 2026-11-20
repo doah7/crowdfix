@@ -56,6 +56,7 @@ SEED_TOPICS = [
         "type": "issue",
         "build_no": "248",
         "floor": "B1",
+        "room": "48B07",  # 강의실·호실 번호 (건물 2자리 + 층 + 호)
         "category": "wifi",
         "title": "B1 Wi-Fi가 자주 끊겨요",
         "summary": "삼성학술정보관 지하 1층에서 Wi-Fi 연결이 수시로 끊김",
@@ -76,6 +77,7 @@ SEED_TOPICS = [
         "type": "issue",
         "build_no": "248",
         "floor": "3F",
+        "room": "48315",  # 강의실·호실 번호 (건물 2자리 + 층 + 호)
         "category": "power",
         "title": "3층 열람실 콘센트가 작동하지 않아요",
         "summary": "삼성학술정보관 3층 열람실 창가 쪽 콘센트 전원 불량",
@@ -100,6 +102,7 @@ SEED_TOPICS = [
         "type": "issue",
         "build_no": "221",
         "floor": "1F",
+        "room": "21115",  # 강의실·호실 번호 (건물 2자리 + 층 + 호)
         "category": "printer",
         "title": "21동 프린터 출력이 안 돼요",
         "summary": "제1공학관21동 1층 학생용 프린터 출력 장애",
@@ -117,6 +120,7 @@ SEED_TOPICS = [
         "type": "issue",
         "build_no": "226",
         "floor": "2F",
+        "room": "26208",  # 강의실·호실 번호 (건물 2자리 + 층 + 호)
         "category": "hvac",
         "title": "26동 강의실 에어컨이 작동하지 않아요",
         "summary": "제2공학관26동 2층 강의실 냉방 불가",
@@ -138,6 +142,7 @@ SEED_TOPICS = [
         "type": "proposal",
         "build_no": "226",
         "floor": "3F",
+        "room": "26312",  # 강의실·호실 번호 (건물 2자리 + 층 + 호)
         "category": "classroom",
         "title": "26동 강의실 칠판을 전자칠판으로 바꿔 주세요",
         "summary": "제2공학관26동 3층 강의실의 분필 칠판을 전자칠판으로 교체해 달라는 제안",
@@ -247,6 +252,7 @@ def seed(db: Session) -> None:
             category=spec["category"],
             building_id=b.id if b else None,
             floor=spec["floor"],
+            room=spec.get("room"),
             status=spec["status"],
             delivery_status=spec["delivery_status"],
             result=spec.get("result"),
@@ -331,7 +337,24 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.if_empty:
-        has_users = inspect(engine).has_table("users")
+        insp = inspect(engine)
+        has_users = insp.has_table("users")
+        # 코드의 스키마에 새 컬럼이 생겼으면(예: git pull 후) 시연 데이터를 새로 만든다
+        outdated = [
+            f"{t.name}.{c.name}"
+            for t in Base.metadata.sorted_tables
+            if insp.has_table(t.name)
+            for c in t.columns
+            if c.name not in {col["name"] for col in insp.get_columns(t.name)}
+        ]
+        if outdated:
+            print(f"[seed] DB 스키마가 바뀌어 시연 데이터를 새로 만듭니다: {', '.join(outdated)}")
+            drop_schema()
+            create_schema()
+            clear_uploads()
+            with SessionLocal() as db:
+                seed(db)
+            return
         create_schema()
         if has_users:
             with SessionLocal() as db:
