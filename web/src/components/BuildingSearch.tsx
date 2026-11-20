@@ -12,7 +12,7 @@ export function BuildingSearch({
   buildings,
   selected,
   onSelect,
-  placeholder = "건물·장소 검색",
+  placeholder = "건물·시설 검색",
   invalid = false,
 }: {
   buildings: Building[];
