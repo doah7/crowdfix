@@ -26,7 +26,10 @@ import {
  * 의제 상세 (REQ-UI-11 배치 순서):
  * 유형·장소·제목 → 처리 상태·전달 상태 → 참여 집계 → 연결된 Report·댓글 → 참여 버튼 → 처리 이력
  */
-export function TopicDetailPage() {
+/** 상세 화면 안에서 참여·구독이 바뀌면 뒤에 있는 목록도 새로 받도록 알린다 */
+export const TOPICS_CHANGED = "crowdfix:topics-changed";
+
+export function TopicDetailPage({ overlay = false }: { overlay?: boolean }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,6 +50,16 @@ export function TopicDetailPage() {
   const { phase, leave } = usePageTransition();
   const back = () => leave(() => (window.history.length > 1 ? navigate(-1) : navigate("/")));
 
+  // 겹쳐 띄운 동안에는 뒤 화면이 스크롤되지 않게 한다
+  useEffect(() => {
+    if (!overlay) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [overlay]);
+
   async function toggleSubscribe() {
     if (!topic || pending) return;
     setPending("sub");
@@ -60,11 +73,8 @@ export function TopicDetailPage() {
     }
   }
 
-  return (
-    <div className="app-shell detail">
-      <Header />
-      {/* 위쪽 바(Header)는 고정하고 아래 내용만 움직인다 */}
-      <div className={`page-body page-slide ${phase}`}>
+  const content = (
+    <>
       <div className="detail-bar">
         <button className="detail-back" onClick={back}>
           ← 뒤로가기
@@ -90,8 +100,32 @@ export function TopicDetailPage() {
           {registered === "new_topic" ? "새 의제로 등록했어요." : "기존 의제에 내 글을 연결했어요."}
         </div>
       )}
-      {topic && <DetailBody topic={topic} onState={(st) => setTopic({ ...topic, ...st, counts: st.counts })} />}
+      {topic && (
+        <DetailBody
+          topic={topic}
+          onState={(st) => {
+            setTopic({ ...topic, ...st, counts: st.counts });
+            window.dispatchEvent(new Event(TOPICS_CHANGED));
+          }}
+        />
+      )}
+    </>
+  );
+
+  if (overlay) {
+    // 뒤 화면(목록·글쓰기)은 그대로 두고, 위쪽 바 아래에서 상세가 왼쪽→오른쪽으로 덮으며 들어온다
+    return (
+      <div className={`detail-overlay page-slide ${phase}`}>
+        <div className="app-shell detail">{content}</div>
       </div>
+    );
+  }
+
+  return (
+    <div className="app-shell detail">
+      <Header />
+      {/* 위쪽 바(Header)는 고정하고 아래 내용만 움직인다 */}
+      <div className={`page-body page-slide ${phase}`}>{content}</div>
     </div>
   );
 }

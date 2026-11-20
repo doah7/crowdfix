@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, type Location } from "react-router-dom";
 import { useAuth } from "./auth";
 import { Explore } from "./pages/Explore";
 import { Login } from "./pages/Login";
@@ -19,13 +19,23 @@ export function App() {
     return <Login />;
   }
 
+  // 목록·글쓰기에서 상세를 열면 그 화면을 뒤에 그대로 두고, 상세를 위에 겹쳐 띄운다
+  const background = (location.state as { background?: Location } | null)?.background;
+
   return (
-    <Routes>
+    <>
+      <Routes location={background ?? location}>
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/" element={<Explore />} />
       <Route path="/topics/:id" element={<TopicDetailPage />} />
       <Route path="/write" element={<WritePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+      {background && (
+        <Routes>
+          <Route path="/topics/:id" element={<TopicDetailPage overlay />} />
+        </Routes>
+      )}
+    </>
   );
 }

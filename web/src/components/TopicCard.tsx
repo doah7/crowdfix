@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { setParticipation, type ParticipationKind, type TopicSummary } from "../api";
 import { STATUS_LABEL, TYPE_LABEL, placeLabel, timeAgo } from "../labels";
 
@@ -9,10 +9,11 @@ import { STATUS_LABEL, TYPE_LABEL, placeLabel, timeAgo } from "../labels";
  */
 export function TopicCard({ topic, onUpdate }: { topic: TopicSummary; onUpdate?: (t: TopicSummary) => void }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [busy, setBusy] = useState<ParticipationKind | null>(null);
   const c = topic.counts;
   const mine = topic.my_participations ?? [];
-  const open = () => navigate(`/topics/${topic.id}`);
+  const open = () => navigate(`/topics/${topic.id}`, { state: { background: location } });
 
   async function toggle(kind: ParticipationKind) {
     if (busy) return;

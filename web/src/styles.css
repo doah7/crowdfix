@@ -519,3 +519,20 @@ p { margin: 0.25rem 0; }
 .map-box .map { opacity: 0; transition: opacity 0.25s ease; }
 .map-box.ready .map { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2s; } }
+
+/* ---------- 상세를 뒤 화면 위에 겹쳐 띄우기 ---------- */
+.topbar { height: 52px; }
+.detail-overlay {
+  position: fixed; top: 52px; left: 0; width: 100%; bottom: 0; z-index: 1100;
+  overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+}
+.detail-overlay > .app-shell { min-height: 100%; box-shadow: 6px 0 18px rgba(0, 0, 0, 0.12); }
+/* 겹쳐 띄울 때는 left가 화면 기준이라 오른쪽 끝까지 덮으며 들어온다 */
+.detail-overlay.page-slide { position: fixed; }
+/* 겹쳐 띄울 때는 반투명 없이 불투명한 채로 밀려 들어오고 나간다 (뒤 화면과 글자가 겹쳐 보이지 않게) */
+@keyframes overlay-in { from { left: -100%; } to { left: 0; } }
+@keyframes overlay-out { from { left: 0; } to { left: -100%; } }
+.detail-overlay.page-slide.enter { animation: overlay-in 0.24s ease-out backwards; }
+.detail-overlay.page-slide.leave { animation: overlay-out 0.24s ease-in both; }
+.detail-overlay.page-slide.leave .join-dock { opacity: 1; }
+.detail-overlay > .app-shell { background: #fff; }

@@ -5,6 +5,7 @@ import { BuildingSearch } from "../components/BuildingSearch";
 import { CampusMap, groupByBuilding } from "../components/CampusMap";
 import { Header } from "../components/Header";
 import { TopicCard } from "../components/TopicCard";
+import { TOPICS_CHANGED } from "./TopicDetail";
 import { STATUS_LABEL, TYPE_LABEL } from "../labels";
 
 const STATUSES: Status[] = ["backlog", "in_progress", "done"];
@@ -75,6 +76,12 @@ export function Explore() {
       alive = false;
     };
   }, [statusKey, sort, cacheKey, reloadKey]);
+
+  useEffect(() => {
+    const onChanged = () => setReloadKey((k) => k + 1);
+    window.addEventListener(TOPICS_CHANGED, onChanged);
+    return () => window.removeEventListener(TOPICS_CHANGED, onChanged);
+  }, []);
 
   useEffect(() => {
     api<Building[]>("/api/buildings")

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { useNavigate, useNavigationType, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ApiError,
   FieldErrors,
@@ -30,54 +30,33 @@ type Similar =
   | { state: "failed" }
   | { state: "done"; candidates: SimilarCandidate[] };
 
-/**
- * 추천된 의제를 열어 보러 상세 화면에 다녀올 때 쓰던 글을 잠시 맡겨 두는 곳.
- * 사진(File)까지 그대로 두려고 메모리에 둔다. 뒤로가기로 돌아왔을 때만 꺼내 쓴다.
- */
-interface Draft {
-  buildingId: number | null;
-  floor: string;
-  title: string;
-  body: string;
-  photos: File[];
-  requestId: string;
-  similar: Similar;
-}
-let parkedDraft: Draft | null = null;
 
 /** Report 작성 (SRS 3.1.6, 4.2). 데모 범위에서 등록은 Issue만 다룬다. */
 export function WritePage() {
   const navigate = useNavigate();
-  const navType = useNavigationType();
+  const location = useLocation();
   const [params] = useSearchParams();
-  // 상세 화면에서 뒤로가기로 돌아온 경우에만 맡겨 둔 글을 되살린다
-  const [draft] = useState<Draft | null>(() => (navType === "POP" ? parkedDraft : null));
-  useEffect(() => {
-    parkedDraft = null; // 한 번 되살렸으면 비운다
-  }, []);
   const [buildings, setBuildings] = useState<Building[]>([]);
-  const [buildingId, setBuildingId] = useState<number | null>(
-    draft ? draft.buildingId : params.get("b") ? Number(params.get("b")) : null,
-  );
-  const [floor, setFloor] = useState(draft?.floor ?? "");
-  const [title, setTitle] = useState(draft?.title ?? "");
-  const [body, setBody] = useState(draft?.body ?? "");
-  const [photos, setPhotos] = useState<File[]>(draft?.photos ?? []);
+  const [buildingId, setBuildingId] = useState<number | null>(params.get("b") ? Number(params.get("b")) : null);
+  const [floor, setFloor] = useState("");
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [photos, setPhotos] = useState<File[]>([]);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   // 한 번 작성한 글은 다시 보내도 같은 요청으로 처리된다 (REQ-REG-12)
-  const requestId = useRef(draft?.requestId ?? newRequestId());
+  const requestId = useRef(newRequestId());
   const fileInput = useRef<HTMLInputElement>(null);
-  const [similar, setSimilar] = useState<Similar>(draft?.similar ?? { state: "idle" });
+  const [similar, setSimilar] = useState<Similar>({ state: "idle" });
   // 글쓰기: 가운데에서 퍼지며 열리고, 닫을 때는 가운데로 모이며 사라진다
   const { phase, leave } = usePageTransition(WRITE_LEAVE_MS);
 
-  // 추천 후보 칸을 누르면 쓰던 글을 맡겨 두고 그 의제의 상세 화면으로 간다
+  // 추천 후보 칸을 누르면 글쓰기 화면을 뒤에 그대로 둔 채 그 의제의 상세를 위에 띄운다.
+  // 상세를 닫으면 쓰던 글(사진 포함)이 그대로 남아 있다.
   function openCandidate(topicId: number) {
-    parkedDraft = { buildingId, floor, title, body, photos, requestId: requestId.current, similar };
-    navigate(`/topics/${topicId}`);
+    navigate(`/topics/${topicId}`, { state: { background: location } });
   }
   const [retryKey, setRetryKey] = useState(0);
 
