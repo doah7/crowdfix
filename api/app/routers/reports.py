@@ -14,7 +14,17 @@ from ..auth import current_user
 from ..config import settings
 from ..db import get_db
 from ..photos import FILE_NAME_RE, PhotoError, clean_image, delete_file, save_file, upload_dir
-from ..services import auto_subscribe, guess_category, guess_floor
+from ..ai import EmbeddingError, embed, report_text, topic_text
+from ..schemas import TopicSummary
+from ..services import (
+    auto_subscribe,
+    guess_category,
+    guess_floor,
+    participation_counts,
+    report_counts,
+    to_summary,
+)
+from ..similar import find_similar
 
 router = APIRouter(tags=["reports"])
 
@@ -47,6 +57,8 @@ async def create_report(
     type: str = Form("issue"),
     building_id: int | None = Form(None),
     floor: str = Form(""),
+    # 작성 중 추천된 기존 의제에 참여할 때 (REQ-UI-20 '이 의제에 참여')
+    target_topic_id: int | None = Form(None),
     photo: list[UploadFile] = File(default=[]),
     db: Session = Depends(get_db),
     user: m.User = Depends(current_user),
@@ -80,6 +92,13 @@ async def create_report(
     if building is None:
         errors["building_id"] = "장소를 선택해 주세요."
 
+    target: m.Topic | None = None
+    if target_topic_id is not None:
+        # 같은 의제에 동시에 여러 Report가 연결돼도 순서대로 처리한다
+        target = db.scalar(select(m.Topic).where(m.Topic.id == target_topic_id).with_for_update())
+        if target is None or target.type != "issue" or target.status == "done":
+            errors["target_topic_id"] = "이 의제에는 참여할 수 없어요. 새 의제로 등록해 주세요."
+
     photos = [p for p in photo if p.filename]
     cleaned: list[tuple[bytes, str, str]] = []
     if len(photos) > settings.photo_max_count:
@@ -98,25 +117,47 @@ async def create_report(
     now = datetime.now(timezone.utc)
     title = title or _title_from_body(body)
     floor_value = floor or guess_floor(f"{title} {body}")
+    text = report_text(title, body)
+    try:
+        # 새 의제도 바로 다음 글의 추천 대상이 되도록 임베딩을 함께 저장한다 (데모 문서 구현 메모)
+        vec: list[float] | None = embed([text])[0]
+    except EmbeddingError:
+        vec = None  # AI가 실패해도 등록은 계속한다 (REQ-REG-07)
     saved: list[str] = []
     try:
         for content, ext, content_type in cleaned:
             saved.append(save_file(content, ext))
 
-        # 비슷한 의제가 없으므로 새 의제로 등록한다. (기존 의제 연결은 Increment 3의 AI 추천에서)
-        topic = m.Topic(
-            type="issue",
-            title=title,
-            summary=body if len(body) <= 120 else body[:119] + "…",
-            category=guess_category(f"{title} {body}"),
-            building_id=building.id,
-            floor=floor_value,
-            status="backlog",            # 새 의제의 초기 상태 (FR-STAT-01)
-            delivery_status="not_sent",
-            last_report_at=now,
-        )
-        db.add(topic)
-        db.flush()
+        similarity, matched = None, None
+        if target is not None:
+            if vec is not None:
+                # 연결 근거(유사도·일치한 속성)를 남긴다 (REQ-DB-03, REQ-SIM-08).
+                # 새 Report를 저장하기 전에 계산해야 자기 자신과 비교되지 않는다.
+                found = find_similar(db, building.id, text, vector=vec)
+                hit = next((c for c in found.candidates if c.topic.id == target.id), None)
+                if hit is not None:
+                    similarity, matched = hit.similarity, {"attrs": hit.matched, "relation": hit.relation}
+            topic = target
+            topic.last_report_at = now
+            link_method = "user_selected"
+        else:
+            # 사용자가 '새 의제로 등록'을 골랐거나 비슷한 의제가 없다
+            summary = body if len(body) <= 120 else body[:119] + "…"
+            topic = m.Topic(
+                type="issue",
+                title=title,
+                summary=summary,
+                category=guess_category(text),
+                building_id=building.id,
+                floor=floor_value,
+                status="backlog",            # 새 의제의 초기 상태 (FR-STAT-01)
+                delivery_status="not_sent",
+                last_report_at=now,
+                embedding=embed([topic_text(title)])[0] if vec is not None else None,
+            )
+            db.add(topic)
+            db.flush()
+            link_method = "new_topic"
 
         report = m.Report(
             author_id=user.id,
@@ -127,6 +168,7 @@ async def create_report(
             floor=floor_value,
             lang="ko",
             client_request_id=client_request_id,
+            embedding=vec,
         )
         db.add(report)
         db.flush()
@@ -134,9 +176,12 @@ async def create_report(
         for name, (content, _ext, content_type) in zip(saved, cleaned):
             db.add(m.Photo(report_id=report.id, file_name=name, content_type=content_type, size_bytes=len(content)))
 
-        db.add(m.ReportLink(report_id=report.id, topic_id=topic.id, method="new_topic", decided_by=user.id))
-        db.add(m.StatusHistory(topic_id=topic.id, from_status=None, to_status="backlog",
-                               actor_role="system", reason="의제 생성"))
+        db.add(m.ReportLink(report_id=report.id, topic_id=topic.id, method=link_method, decided_by=user.id,
+                            similarity=similarity, matched_attrs=matched))
+        if target is None:
+            db.add(m.StatusHistory(topic_id=topic.id, from_status=None, to_status="backlog",
+                                   actor_role="system", reason="의제 생성"))
+        # 작성자 자동 구독 (FR-NOTI-02). Report 연결만으로는 참여 인원이 늘지 않는다 (BR-03).
         auto_subscribe(db, user.id, topic.id)
 
         # Report 저장과 의제 연결이 모두 성공해야 커밋한다 (REQ-REG-11, NFR-SF04)
@@ -149,14 +194,65 @@ async def create_report(
         first = db.scalar(select(m.Report).where(m.Report.client_request_id == client_request_id))
         if first is None or first.author_id != user.id:
             raise
-        return ReportCreated(report_id=first.id, topic_id=first.topic_id, link="new_topic")
+        method = db.scalar(select(m.ReportLink.method).where(m.ReportLink.report_id == first.id))
+        return ReportCreated(report_id=first.id, topic_id=first.topic_id, link=method or "new_topic")
     except Exception:
         db.rollback()
         for name in saved:
             delete_file(name)
         raise
 
-    return ReportCreated(report_id=report.id, topic_id=topic.id, link="new_topic")
+    return ReportCreated(report_id=report.id, topic_id=topic.id, link=link_method)
+
+
+class SimilarIn(BaseModel):
+    building_id: int
+    title: str = ""
+    body: str
+
+
+class SimilarCandidate(BaseModel):
+    topic: TopicSummary
+    similarity: float
+    relation: str          # same(같음) | related(관련 있음)
+    matched: list[str]     # 일치한 속성
+
+
+class SimilarOut(BaseModel):
+    category: str | None   # 본문에서 추출한 대상
+    floor: str | None
+    candidates: list[SimilarCandidate]
+
+
+@router.post("/api/similar", response_model=SimilarOut)
+def similar(req: SimilarIn, db: Session = Depends(get_db), _user: m.User = Depends(current_user)):
+    """작성 중인 글과 비슷한 의제 후보 (SRS 4.3). 등록 버튼을 누르기 전에 화면이 호출한다."""
+    text = report_text(req.title, req.body)
+    if len(text.strip()) < settings.similar_min_text:
+        return SimilarOut(category=None, floor=None, candidates=[])
+    if db.get(m.Building, req.building_id) is None:
+        raise _field_errors({"building_id": "장소를 선택해 주세요."})
+    try:
+        found = find_similar(db, req.building_id, text)
+    except EmbeddingError:
+        # 실패를 '유사 의제 없음'으로 보이지 않게 구분한다 (REQ-SIM-09)
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail={"type": "ai_unavailable"})
+    ids = [c.topic.id for c in found.candidates]
+    counts = participation_counts(db, ids)
+    n_reports = report_counts(db, ids)
+    return SimilarOut(
+        category=found.category,
+        floor=found.floor,
+        candidates=[
+            SimilarCandidate(
+                topic=to_summary(c.topic, counts[c.topic.id], n_reports.get(c.topic.id, 0)),
+                similarity=c.similarity,
+                relation=c.relation,
+                matched=c.matched,
+            )
+            for c in found.candidates
+        ],
+    )
 
 
 @router.get("/api/photos/{file_name}")

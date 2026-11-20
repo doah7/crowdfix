@@ -1,13 +1,31 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ApiError, FieldErrors, api, createReport, newRequestId, type Building } from "../api";
+import {
+  ApiError,
+  FieldErrors,
+  api,
+  createReport,
+  findSimilar,
+  newRequestId,
+  type Building,
+  type SimilarCandidate,
+} from "../api";
 import { BuildingSearch } from "../components/BuildingSearch";
 import { Header } from "../components/Header";
+import { placeLabel } from "../labels";
 
 // 사진 제한 (데모 문서 TBD-09). 서버에서도 같은 기준으로 다시 검사한다.
 const PHOTO_MAX = 1;
 const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 const PHOTO_TYPES = ["image/jpeg", "image/png"];
+const SIMILAR_MIN_TEXT = 8;
+const SIMILAR_DEBOUNCE_MS = 500;
+
+type Similar =
+  | { state: "idle" }
+  | { state: "searching" }
+  | { state: "failed" }
+  | { state: "done"; candidates: SimilarCandidate[] };
 
 /** Report 작성 (SRS 3.1.6, 4.2). 데모 범위에서 등록은 Issue만 다룬다. */
 export function WritePage() {
@@ -26,6 +44,31 @@ export function WritePage() {
   // 한 번 작성한 글은 다시 보내도 같은 요청으로 처리된다 (REQ-REG-12)
   const requestId = useRef(newRequestId());
   const fileInput = useRef<HTMLInputElement>(null);
+  const [similar, setSimilar] = useState<Similar>({ state: "idle" });
+  const [retryKey, setRetryKey] = useState(0);
+
+  // 본문을 입력하는 동안 비슷한 의제를 찾는다. 등록 버튼을 누르기 전에 보여준다 (데모 문서 5장).
+  useEffect(() => {
+    if (!buildingId || body.trim().length < SIMILAR_MIN_TEXT) {
+      setSimilar({ state: "idle" });
+      return;
+    }
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => {
+      setSimilar((prev) => (prev.state === "done" ? prev : { state: "searching" }));
+      findSimilar(buildingId, title, body, ctrl.signal)
+        .then((r) => setSimilar({ state: "done", candidates: r.candidates }))
+        .catch(() => {
+          if (!ctrl.signal.aborted) setSimilar({ state: "failed" });
+        });
+    }, SIMILAR_DEBOUNCE_MS);
+    return () => {
+      clearTimeout(timer);
+      ctrl.abort();
+    };
+  }, [buildingId, title, body, retryKey]);
+
+  const candidates = similar.state === "done" ? similar.candidates : [];
 
   useEffect(() => {
     api<Building[]>("/api/buildings").then(setBuildings).catch(() => setBuildings([]));
@@ -56,6 +99,10 @@ export function WritePage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    await submit(null);
+  }
+
+  async function submit(targetTopicId: number | null) {
     const local: Record<string, string> = {};
     if (!buildingId) local.building_id = "장소를 선택해 주세요.";
     if (body.trim().length < 5) local.body = "내용을 5자 이상 적어 주세요.";
@@ -70,6 +117,7 @@ export function WritePage() {
     form.set("floor", floor);
     form.set("title", title);
     form.set("body", body);
+    if (targetTopicId !== null) form.set("target_topic_id", String(targetTopicId));
     for (const p of photos) form.append("photo", p);
 
     setBusy(true);
@@ -150,6 +198,14 @@ export function WritePage() {
           {errors.body && <div className="field-error">{errors.body}</div>}
         </label>
 
+        <SimilarPanel
+          similar={similar}
+          busy={busy}
+          onJoin={(id) => void submit(id)}
+          onRetry={() => setRetryKey((k) => k + 1)}
+        />
+        {errors.target_topic_id && <div className="field-error">{errors.target_topic_id}</div>}
+
         <div className="field">
           <div className="row between">
             <span className="field-label">사진 (선택)</span>
@@ -196,9 +252,87 @@ export function WritePage() {
         {formError && <div className="banner warn">{formError}</div>}
 
         <button className="btn primary block" disabled={busy}>
-          {busy ? "등록하는 중…" : "등록하기"}
+          {busy ? "등록하는 중…" : candidates.length > 0 ? "새 의제로 등록" : "등록하기"}
         </button>
       </form>
     </div>
+  );
+}
+
+/**
+ * 유사 의제 확인 영역 (REQ-UI-20). 작성 중인 본문과 구분된 곳에 후보를 보여주고,
+ * 사용자가 고르기 전에는 연결된 것처럼 표시하지 않는다.
+ */
+function SimilarPanel({
+  similar,
+  busy,
+  onJoin,
+  onRetry,
+}: {
+  similar: Similar;
+  busy: boolean;
+  onJoin: (topicId: number) => void;
+  onRetry: () => void;
+}) {
+  if (similar.state === "idle") return null;
+  if (similar.state === "searching") {
+    return (
+      <div className="similar-box muted small" aria-live="polite">
+        비슷한 의제를 찾는 중…
+      </div>
+    );
+  }
+  if (similar.state === "failed") {
+    // 검색 실패는 '유사 의제 없음'으로 표시하지 않는다 (REQ-SIM-09)
+    return (
+      <div className="similar-box failed" aria-live="polite">
+        <span className="small">비슷한 의제를 찾지 못했어요(검색 오류). 새 의제로 등록할 수 있어요.</span>
+        <button type="button" className="btn small" onClick={onRetry}>
+          다시 찾기
+        </button>
+      </div>
+    );
+  }
+  if (similar.candidates.length === 0) {
+    return (
+      <div className="similar-box muted small" aria-live="polite">
+        이 장소에 비슷한 의제가 없어요. 새 의제로 등록돼요.
+      </div>
+    );
+  }
+  return (
+    <section className="similar-box found" aria-live="polite">
+      <h2>비슷한 의제가 있어요</h2>
+      <p className="muted small">같은 문제라면 새로 쓰지 말고 기존 의제에 참여해 주세요. 목소리가 한곳에 모여요.</p>
+      <ul className="similar-list">
+        {similar.candidates.map((c) => {
+          const t = c.topic;
+          return (
+            <li key={t.id} className="similar-item">
+              <div className="row gap wrap">
+                <span className={`chip type-${t.type}`}>Issue</span>
+                <span className={`chip relation-${c.relation}`}>
+                  {c.relation === "same" ? "같은 문제로 보여요" : "관련 있을 수 있어요"}
+                </span>
+              </div>
+              <div className="similar-title">{t.title}</div>
+              <div className="muted small">{placeLabel(t)}</div>
+              <div className="small">
+                경험자 {t.counts.experienced}명 · 개선 지지 {t.counts.needs_improvement}명 · 연결된 Report {t.report_count}건
+              </div>
+              <div className="muted small">일치: {c.matched.join(", ")}</div>
+              <button
+                type="button"
+                className="btn primary small join-topic"
+                disabled={busy}
+                onClick={() => onJoin(t.id)}
+              >
+                이 의제에 참여
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }

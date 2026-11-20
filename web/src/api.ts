@@ -180,3 +180,24 @@ export function newRequestId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
+
+export interface SimilarCandidate {
+  topic: TopicSummary;
+  similarity: number;
+  relation: "same" | "related";
+  matched: string[];
+}
+
+export interface SimilarResult {
+  category: string | null;
+  floor: string | null;
+  candidates: SimilarCandidate[];
+}
+
+export function findSimilar(buildingId: number, title: string, body: string, signal?: AbortSignal) {
+  return api<SimilarResult>("/api/similar", {
+    method: "POST",
+    body: JSON.stringify({ building_id: buildingId, title, body }),
+    signal,
+  });
+}

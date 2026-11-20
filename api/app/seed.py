@@ -277,8 +277,24 @@ def seed(db: Session) -> None:
             db.add(m.Delivery(topic_id=topic.id, org_name=org, email=email, trigger="auto",
                               result="accepted", created_at=spec["created"] + timedelta(days=1)))
 
+    db.flush()
+    _embed_all(db)
     db.commit()
     print(f"[seed] 건물·장소 {n_buildings}곳, 계정 {len(users)}개, 시드 의제 {len(SEED_TOPICS)}건을 넣었습니다.")
+
+
+def _embed_all(db: Session) -> None:
+    """시드 의제와 Report의 임베딩을 저장해 유사 의제 검색 대상이 되게 한다."""
+    try:
+        from .ai import embed, report_text, topic_text
+
+        topics = db.scalars(select(m.Topic)).all()
+        reports = db.scalars(select(m.Report)).all()
+        vecs = embed([topic_text(t.title) for t in topics] + [report_text(r.title, r.body) for r in reports])
+        for obj, vec in zip([*topics, *reports], vecs):
+            obj.embedding = vec
+    except Exception as e:  # 모델이 없으면 검색만 빠지고 나머지 시연 데이터는 들어간다
+        print(f"[seed] 임베딩을 만들지 못했습니다: {e}")
 
 
 def clear_uploads() -> None:

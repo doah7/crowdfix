@@ -20,8 +20,19 @@ class Settings(BaseSettings):
     report_mail_from: str = "crowdfix@demo.local"
     report_mail_to: str = "facility-team@demo.local"
 
-    # 임베딩 벡터 차원 (Increment 3에서 사용할 다국어 모델 기준)
+    # 다국어 문장 임베딩 모델 (SRS 2.4, TBD-06). Dockerfile에서 이미지에 미리 받아 둔다.
+    embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     embedding_dim: int = 384
+
+    # 유사 의제 판정 기준 (TBD-06). AI 테스트 문장으로 정한 값이다. README 'AI 추천 기준' 참고.
+    similar_min_text: int = 8          # 본문이 이보다 짧으면 검색하지 않는다
+    # 본문에서 뽑은 대상(프린터·Wi-Fi 등)이 후보와 같을 때
+    similar_same_target: float = 0.55      # 이 이상이면 '같음'
+    similar_related_target: float = 0.40   # 이 이상이면 '관련 있음'
+    # 대상을 알 수 없을 때는 문장 유사도만으로 판단하므로 더 높게 잡는다
+    similar_same: float = 0.85
+    similar_related: float = 0.80
+    similar_max_candidates: int = 3
 
 
 settings = Settings()

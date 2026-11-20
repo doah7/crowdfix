@@ -15,7 +15,7 @@ cd crowdfix
 docker compose up --build
 ```
 
-처음 실행하면 이미지 빌드에 몇 분이 걸립니다. 다 뜨면:
+처음 실행하면 이미지 빌드에 10분 안팎이 걸립니다. AI 임베딩 모델과 PyTorch(CPU)를 이미지에 함께 넣기 때문입니다(api 이미지 약 2.9GB, 한 번만 받으면 됩니다). 다 뜨면:
 
 | 주소 | 내용 |
 |---|---|
@@ -56,6 +56,28 @@ docker compose exec api python -m app.demo c1-join
 
 장면 1에서 첨부할 리허설용 사진은 `data/demo/printer_error.png`에 있습니다. 발표 때는 실제 프린터 오류 화면 사진으로 바꿔도 됩니다.
 
+### AI 유사 의제 추천
+
+글쓰기 화면에서 장소를 고르고 본문을 8자 이상 쓰면, 입력을 멈춘 뒤 0.5초 안에 비슷한 의제를 찾아 카드로 보여줍니다(등록 버튼을 누르기 전).
+
+1. **선택한 건물로 후보를 먼저 거릅니다.** 다른 건물의 의제는 비교하지 않습니다. 결과가 공개된(Done) 의제도 뺍니다(재발 판단 기준 TBD-15가 미결이라서).
+2. 다국어 문장 임베딩 모델 [`paraphrase-multilingual-MiniLM-L12-v2`](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2)로 의제 제목과 연결된 Report 본문을 비교합니다(pgvector 코사인 유사도).
+3. 본문에서 대상(프린터·Wi-Fi·콘센트·냉난방)과 층을 뽑아 비교합니다. **대상이 서로 다르면 유사도가 높아도 추천하지 않습니다.**
+4. 연결은 항상 사용자가 '이 의제에 참여'를 눌러야 됩니다. 연결 근거(유사도, 일치한 속성)는 `report_links`에 남습니다.
+
+| 조건 | 같은 문제로 보여요 | 관련 있을 수 있어요 |
+|---|---|---|
+| 대상이 같음 | 유사도 0.55 이상 | 0.40 이상 |
+| 대상을 알 수 없음 | 0.85 이상 | 0.80 이상 |
+
+기준값은 `api/app/config.py`의 `similar_*`에 있습니다. 바꾼 뒤에는 아래 점검으로 데모 문서의 AI 테스트 문장이 그대로 통과하는지 확인합니다. 점검은 시연 데이터를 초기화한 뒤 실행하고, 끝나면 다시 초기화합니다.
+
+```bash
+docker compose exec api python -m app.check_ai
+```
+
+모델을 고를 때 세 모델을 비교했습니다. `multilingual-e5-small`과 `e5-base`는 관계없는 문장끼리도 0.83 이상을 주어, 같은 문제와 다른 문제를 가르는 폭이 가장 넓은 MiniLM을 골랐습니다.
+
 ### 입력 규칙 (데모 기준)
 
 | 항목 | 규칙 |
@@ -79,6 +101,9 @@ crowdfix/
 │  ├─ demo.py           시연 진행 보조 (C1 참여)
 │  ├─ auth.py           시연용 계정 로그인, 학생·운영자 권한 구분
 │  ├─ photos.py         사진 형식·크기 검사, EXIF/GPS 제거
+│  ├─ ai.py             문장 임베딩 (서버 시작 시 모델 미리 로드)
+│  ├─ similar.py        유사 의제 후보 검색과 '같음/관련 있음/별개' 판정
+│  ├─ check_ai.py       AI 테스트 문장 점검
 │  ├─ services.py       참여 집계(고유 인원), 자동 구독 등 공통 로직
 │  └─ routers/          API (auth, buildings, topics, reports, notifications)
 └─ web/src/
@@ -92,7 +117,7 @@ crowdfix/
 | 클라이언트 | React, TypeScript, Leaflet (지도 타일: OpenStreetMap) |
 | 서버 | FastAPI, SQLAlchemy |
 | DB | PostgreSQL 16 + pgvector |
-| AI | Sentence Transformers 다국어 임베딩 (Increment 3) |
+| AI | Sentence Transformers 다국어 임베딩, pgvector 코사인 검색 |
 | 배포 | Docker Compose |
 
 `api/app`과 `web/src`는 컨테이너에 연결되어 있어서, 코드를 고치면 서버와 화면이 자동으로 다시 로드됩니다.
@@ -103,7 +128,7 @@ crowdfix/
 |---|---|---|---|
 | 1 | 실행 환경, DB 스키마, 건물·시드 데이터, 초기화 스크립트, 로그인, 지도·필터·목록(Proposal 탭)·의제 상세 조회 | 장면 1의 1~4 | ✅ 완료 |
 | 2 | Report 작성, 사진 첨부(1장·5MB, GPS 제거), 새 의제 생성, 참여 버튼·고유 인원 집계, 구독 | 장면 1의 5~6 | ✅ 완료 |
-| 3 | 작성 중 AI 유사 의제 추천(건물로 먼저 거름), 기존 의제에 참여 | 장면 2 | 예정 |
+| 3 | 작성 중 AI 유사 의제 추천(건물로 먼저 거름), 기존 의제에 참여 | 장면 2 | ✅ 완료 |
 | 4 | 기준값 T 도달 시 보고서 메일 1회 발송, 중복 발송 방지 | 장면 3 | 예정 |
 | 5 | 운영자 상태 변경·결과 입력, 구독자 알림함 | 장면 4~5 | 예정 |
 

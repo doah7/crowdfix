@@ -64,7 +64,7 @@ export function TopicDetailPage() {
           <br />
           {registered === "new_topic"
             ? "비슷한 의제가 없어 새 의제로 등록했어요."
-            : "기존 의제에 연결했어요."}
+            : "기존 의제에 내 글을 연결했어요. 같은 문제를 겪었다면 아래 참여 버튼을 눌러 주세요."}
         </div>
       )}
       {topic && (
