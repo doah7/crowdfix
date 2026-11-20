@@ -172,8 +172,10 @@ export function WritePage() {
   }
 
   return (
-    <div className={`app-shell write page-zoom ${phase}`}>
+    <div className="app-shell write">
       <Header />
+      {/* 위쪽 바(Header)는 고정하고 아래 내용만 움직인다 */}
+      <div className={`page-body page-zoom ${phase}`}>
       <div className="detail-bar divider">
         <button className="detail-back" onClick={() => leave(() => navigate(-1))}>
           ← 취소
@@ -282,6 +284,7 @@ export function WritePage() {
           {busy ? "등록하는 중…" : candidates.length > 0 ? "새 의제로 등록" : "등록하기"}
         </button>
       </form>
+      </div>
     </div>
   );
 }

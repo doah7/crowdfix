@@ -61,8 +61,10 @@ export function TopicDetailPage() {
   }
 
   return (
-    <div className={`app-shell detail page-slide ${phase}`}>
+    <div className="app-shell detail">
       <Header />
+      {/* 위쪽 바(Header)는 고정하고 아래 내용만 움직인다 */}
+      <div className={`page-body page-slide ${phase}`}>
       <div className="detail-bar">
         <button className="detail-back" onClick={back}>
           ← 뒤로가기
@@ -89,6 +91,7 @@ export function TopicDetailPage() {
         </div>
       )}
       {topic && <DetailBody topic={topic} onState={(st) => setTopic({ ...topic, ...st, counts: st.counts })} />}
+      </div>
     </div>
   );
 }
