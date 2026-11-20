@@ -58,7 +58,7 @@ function markerIcon(g: MarkerGroup, selected: boolean) {
     <div class="pin-stack ${selected ? "selected" : ""}">
       ${back}${front}
       <span class="pin-count">${g.topics.length}</span>
-      <span class="pin-badge">${PERSON_ICON}${people}</span>
+      <span class="pin-badge">${PERSON_ICON}<span class="num">${people}</span></span>
     </div>`;
   // 앞 핀의 뾰족한 끝이 건물 좌표를 가리킨다
   return L.divIcon({ html, className: "marker-wrap", iconSize: [66, 54], iconAnchor: [26, 51] });
