@@ -428,3 +428,17 @@ p { margin: 0.25rem 0; }
 .write .similar-item { border: 1.5px solid #e6e8eb; border-radius: 14px; padding: 12px 14px; }
 .write .similar-title { font-size: 0.98rem; }
 .pill.join-topic { background: var(--brand); color: #fff; margin-top: 6px; }
+
+/* ---------- 상세: 참여 버튼을 화면 아래에 고정 (지도|목록 바와 같은 위치) ---------- */
+.detail .detail-body { padding-bottom: 96px; }
+.join-dock {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 1000;
+  width: 100%; max-width: var(--shell);
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: #fff; border-top: 1px solid var(--line);
+}
+.join-dock.join-row { display: grid; }
+.done-note {
+  border-radius: 999px; padding: 13px 10px; text-align: center; font-weight: 800; font-size: 0.92rem;
+  background: #e8eefc; color: #3b63d9;
+}

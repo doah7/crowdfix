@@ -193,8 +193,13 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
         </ul>
       </section>
 
-      {/* 참여 버튼: 본인의 선택 여부를 버튼에 표시한다 (REQ-UI-12) */}
-      <div className={`join-row ${topic.type}`}>
+      {/* 참여 버튼: 본인의 선택 여부를 버튼에 표시한다 (REQ-UI-12). 화면 아래에 고정. */}
+      {topic.status === "done" ? (
+        <div className="join-dock">
+          <div className="done-note">{DONE_MESSAGE[topic.result ?? ""] ?? "처리가 완료되었어요."}</div>
+        </div>
+      ) : (
+      <div className={`join-dock join-row ${topic.type}`}>
         {topic.type === "issue" ? (
           <>
             <JoinPill label="✋ 나도 겪었어요" on={topic.my_participations.includes("experienced")}
@@ -207,6 +212,7 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
             busy={pending !== null} onClick={() => void toggle("want")} />
         )}
       </div>
+      )}
       {actionError && <div className="field-error">{actionError}</div>}
 
       <section>
@@ -233,6 +239,15 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
     </main>
   );
 }
+
+// 완료된 의제의 아래 고정 영역 문구 (처리 결과별)
+const DONE_MESSAGE: Record<string, string> = {
+  resolved: "문제가 해결되었어요.",
+  closed_unresolved: "해결되지 않고 종료되었어요.",
+  adopted: "제안이 채택되었어요.",
+  partially_adopted: "제안이 일부 채택되었어요.",
+  not_adopted: "제안이 채택되지 않았어요.",
+};
 
 function JoinPill(props: { label: string; on: boolean; busy: boolean; proposal?: boolean; onClick: () => void }) {
   return (
