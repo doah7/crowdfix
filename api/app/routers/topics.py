@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from .. import models as m
 from ..auth import current_user
 from ..db import get_db
+from ..delivery import send_reserved
 from ..schemas import Counts, HistoryOut, PhotoOut, ReportOut, TopicDetail, TopicSummary
 from ..services import add_participation, participation_counts, report_counts, threshold_for, to_summary
 
@@ -110,6 +111,7 @@ ParticipationKind = Literal["experienced", "needs_improvement", "want"]
 
 class ParticipationState(BaseModel):
     counts: Counts
+    delivery_status: str   # 참여로 기준에 도달하면 바로 '전달 완료'가 보이도록 함께 돌려준다
     my_participations: list[str]
     subscribed: bool
 
@@ -122,7 +124,10 @@ def _state(db: Session, topic: m.Topic, user: m.User) -> ParticipationState:
     sub = db.scalar(
         select(m.Subscription).where(m.Subscription.topic_id == topic.id, m.Subscription.user_id == user.id)
     )
-    return ParticipationState(counts=counts, my_participations=list(mine), subscribed=bool(sub and sub.active))
+    return ParticipationState(
+        counts=counts, delivery_status=topic.delivery_status,
+        my_participations=list(mine), subscribed=bool(sub and sub.active),
+    )
 
 
 def _topic_or_404(db: Session, topic_id: int, lock: bool = False) -> m.Topic:
@@ -144,8 +149,11 @@ def participate(
     topic = _topic_or_404(db, topic_id, lock=True)
     if kind not in KINDS_BY_TYPE[topic.type]:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail={"type": "invalid_kind"})
-    add_participation(db, topic, user.id, kind)
+    mail = add_participation(db, topic, user.id, kind)
     db.commit()
+    if mail is not None:
+        # 참여와 발송 예약이 저장된 뒤에 보낸다 (이중 발송 방지)
+        send_reserved(db, mail)
     return _state(db, topic, user)
 
 
@@ -191,3 +199,4 @@ def unsubscribe(topic_id: int, db: Session = Depends(get_db), user: m.User = Dep
     )
     db.commit()
     return _state(db, topic, user)
+

@@ -129,6 +129,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export interface ParticipationState {
   counts: Counts;
+  delivery_status: DeliveryStatus;
   my_participations: string[];
   subscribed: boolean;
 }
