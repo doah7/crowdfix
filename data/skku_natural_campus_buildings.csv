@@ -1,0 +1,54 @@
+build_no,name_ko,name_en,latitude,longitude,kind
+,모듈러,"modular building",37.292046,126.974838,building
+,킹고광장,"Kingo Square",37.294009,126.973911,place
+,글로벌광장,"Global Square",37.293053,126.974480,place
+,공자로,"Confucius Road",37.294431,126.975794,place
+,해오름길,"Sun Mount Path",37.295080,126.973447,place
+,북문,"North Gate",37.296227,126.976364,place
+,북서문,"Northwest gate",37.297107,126.974193,place
+,대운동장,"Large Playground",37.295187,126.970977,place
+,정문,"Main Gate",37.290649,126.974074,place
+,축구장,"Football Field",37.293659,126.970816,place
+,야구장,"Baseball Field",37.291471,126.970921,place
+,테니스장,"Tennis Court",37.293067,126.970720,place
+203,학생회관,"Student Center",37.293872,126.97355,building
+204,복지회관,"Shop&Service Center",37.29396,126.972533,building
+205,수성관,"Suseonggwan",37.293219,126.972004,building
+211,유틸리티센터,"Utility Center",37.294102,126.978588,building
+212,환경플랜트,"Environment Plant",37.290988,126.975282,building
+219,후문(서문),"Back Gate(West Gate)",37.296305,126.970633,place
+221,제1공학관21동,"Engineering 1 (21)",37.293633,126.976405,building
+222,제1공학관22동,"Engineering 1 (22)",37.293847,126.977091,building
+223,제1공학관23동,"Engineering 1 (23)",37.294293,126.976662,building
+224,공학실습동B(24),"Engineering Lab B (24)",37.293284,126.977898,building
+225,제2공학관25동,"Engineering 2 (25)",37.294739,126.976718,building
+226,제2공학관26동,"Engineering 2 (26)",37.295087,126.977450,building
+227,제2공학관27동,"Engineering 2 (27)",37.295505,126.976927,building
+230,건축환경실험실,"Architecture Environment Lab",37.293356,126.976959,building
+231,제1과학관31동,"Natural Sciences 1 (31)",37.294377,126.974881,building
+232,제2과학관32동,"Natural Sciences 2 (32)",37.294928,126.974766,building
+233,화학관,"Chemistry",37.291544,126.977409,building
+236,E 센터,"E Center",37.295093,126.978099,building
+237,CNS센터,"CNS Center",37.294697,126.97801,building
+240,반도체관,"Semiconductor",37.291781,126.978085,building
+248,삼성학술정보관,"Samsung Library",37.293885,126.974906,building
+249,운용재,"Unyong-Jae",37.294555,126.971921,building
+251,기초학문관51동,"General Studies (51)",37.295363,126.974259,building
+253,약학관,"School of Pharmacy",37.291914,126.976538,building
+261,생명공학관61동,"Life Science and Tech (61)",37.295862,126.973918,building
+262,생명공학관62동,"Life Science and Tech (62)",37.296092,126.974554,building
+270,대강당,"Auditorium",37.292326,126.972404,building
+271,의학관,"Medicine School",37.292110,126.973383,building
+272,체육관,"Gymnasium",37.292399,126.97069,building
+281,제1종합연구동,"Research Complex 1",37.292224,126.978466,building
+283,제2종합연구동,"Research Complex 2",37.293159,126.978511,building
+284,제약기술관,"DRC",37.291544,126.976448,building
+285,산학협력센터,"Research & Business Center",37.295857,126.97565,building
+286,N센터,"N Center",37.291996,126.975703,building
+289,학군단,"ROTC",37.294380,126.971825,building
+291,기숙사인관,"Dormitory: In-gwan",37.296935,126.973932,building
+292,기숙사의관,"Dormitory Ui-gwan",37.296915,126.974522,building
+293,기숙사예관,"Dormitory Ye-gwan",37.296601,126.975574,building
+295,기숙사지관,"Dormitory Ji-gwan",37.296413,126.977534,building
+296,게스트하우스,"Guest House",37.295791,126.977777,building
+298,기숙사신관,"Dormitory Shin-gwan",37.296407,126.972393,building

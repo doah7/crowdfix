@@ -1,0 +1,63 @@
+name: crowdfix
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: crowdfix
+      POSTGRES_PASSWORD: crowdfix
+      POSTGRES_DB: crowdfix
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crowdfix -d crowdfix"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./api
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://crowdfix:crowdfix@db:5432/crowdfix
+      BUILDINGS_CSV: /data/skku_natural_campus_buildings.csv
+      UPLOAD_DIR: /uploads
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+    volumes:
+      - ./api/app:/srv/app
+      - ./data:/data:ro
+      - uploads:/uploads
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./web
+    environment:
+      API_PROXY_TARGET: http://api:8000
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./web/src:/srv/src
+      - ./web/index.html:/srv/index.html
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+  # 시험용 메일 수신함 (SRS 2.5). 받은 메일은 http://localhost:8025 에서 본다.
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+volumes:
+  db-data:
+  uploads:
