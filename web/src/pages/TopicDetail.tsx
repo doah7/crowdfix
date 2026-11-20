@@ -195,7 +195,7 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
 
       {/* 참여 버튼: 본인의 선택 여부를 버튼에 표시한다 (REQ-UI-12). 화면 아래에 고정. */}
       {topic.status === "done" ? (
-        <div className="join-dock">
+        <div className="join-dock done">
           <div className="done-note">{DONE_MESSAGE[topic.result ?? ""] ?? "처리가 완료되었어요."}</div>
         </div>
       ) : (
