@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     smtp_port: int = 1025
     report_mail_from: str = "crowdfix@demo.local"
     report_mail_to: str = "facility-team@demo.local"
+    # 보고서 메일의 '원문 보기' 링크 주소
+    public_base_url: str = "http://localhost:5173"
 
     # 다국어 문장 임베딩 모델 (SRS 2.4, TBD-06). Dockerfile에서 이미지에 미리 받아 둔다.
     embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"

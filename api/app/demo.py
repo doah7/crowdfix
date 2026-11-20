@@ -12,6 +12,7 @@ from sqlalchemy import select
 
 from . import models as m
 from .db import SessionLocal
+from .delivery import send_reserved
 from .services import add_participation, participation_counts
 
 
@@ -32,8 +33,10 @@ def c1_join() -> None:
         )
         if topic is None:
             raise SystemExit("학생 A가 등록한 의제가 없습니다. 장면 1을 먼저 진행하세요.")
-        add_participation(db, topic, c1.id, "experienced")
+        mail = add_participation(db, topic, c1.id, "experienced")
         db.commit()
+        if mail is not None:
+            send_reserved(db, mail)
         c = participation_counts(db, [topic.id])[topic.id]
         print(f"[demo] C1이 '{topic.title}'에 참여했습니다. 고유 참여 {c.unique}명")
 

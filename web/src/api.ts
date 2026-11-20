@@ -129,6 +129,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export interface ParticipationState {
   counts: Counts;
+  delivery_status: DeliveryStatus;
   my_participations: string[];
   subscribed: boolean;
 }
@@ -202,4 +203,36 @@ export function findSimilar(buildingId: number, title: string, body: string, sig
     body: JSON.stringify({ building_id: buildingId, title, body }),
     signal,
   });
+}
+
+// ---------- 운영자 상태 변경 (SRS 4.4) ----------
+
+export function changeStatus(
+  topicId: number,
+  body: { status: "in_progress" | "done"; reason: string; result?: "resolved" | "closed_unresolved" },
+) {
+  return api<{ status: Status; notified: number }>(`/api/topics/${topicId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+}
+
+// ---------- 알림함 (SRS 4.5) ----------
+
+export interface Notice {
+  id: number;
+  topic_id: number;
+  topic_title: string;
+  event: string;
+  summary: string;
+  read: boolean;
+  created_at: string;
+}
+
+export function listNotifications() {
+  return api<Notice[]>("/api/notifications");
+}
+
+export function markNotificationRead(id: number) {
+  return api<{ read: boolean }>(`/api/notifications/${id}/read`, { method: "PUT" });
 }

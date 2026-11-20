@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation, useNavigationType, type Location 
 import { useAuth } from "./auth";
 import { NavTypeContext } from "./pageTransition";
 import { Explore } from "./pages/Explore";
+import { InboxPage } from "./pages/Inbox";
 import { Login } from "./pages/Login";
 import { TopicDetailPage } from "./pages/TopicDetail";
 import { WritePage } from "./pages/Write";
@@ -31,6 +32,7 @@ export function App() {
       <Route path="/" element={<Explore />} />
       <Route path="/topics/:id" element={<TopicDetailPage />} />
       <Route path="/write" element={<WritePage />} />
+      <Route path="/notifications" element={<InboxPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {background && (

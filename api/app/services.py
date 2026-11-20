@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from . import models as m
 from .config import settings
+from .delivery import PendingMail, reserve_if_ready
 from .schemas import BuildingRef, Counts, TopicSummary
 
 
@@ -108,15 +109,18 @@ def guess_floor(text: str) -> str | None:
     return mt.group(1).upper() if mt.group(1) else f"{mt.group(2)}F"
 
 
-def add_participation(db: Session, topic: m.Topic, user_id: int, kind: str) -> None:
+def add_participation(db: Session, topic: m.Topic, user_id: int, kind: str) -> PendingMail | None:
     """참여 등록 (같은 버튼 반복은 한 번만). 버튼을 누른 사용자는 자동 구독된다 (FR-NOTI-02).
-    호출하는 쪽에서 topic 행을 잠그고(SELECT … FOR UPDATE) 커밋한다."""
+    호출하는 쪽에서 topic 행을 잠그고(SELECT … FOR UPDATE) 커밋한다.
+    잠근 상태에서 고유 인원을 다시 세어 기준에 처음 도달하면 보고서 발송을 예약해 돌려준다 (SRS 4.4.2).
+    호출한 쪽은 커밋한 뒤 delivery.send_reserved()로 보낸다."""
     db.execute(
         insert(m.Participation)
         .values(user_id=user_id, topic_id=topic.id, kind=kind)
         .on_conflict_do_nothing(constraint="uq_participation")
     )
     auto_subscribe(db, user_id, topic.id)
+    return reserve_if_ready(db, topic, participation_counts(db, [topic.id])[topic.id], threshold_for(topic.type))
 
 
 # 강의실·호실 번호: 5~6자리 숫자(예: 26312 = 26동 3층 12호). 지하는 48B07처럼 B를 쓴다.

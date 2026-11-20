@@ -9,7 +9,9 @@ import {
   type ParticipationState,
   type TopicDetail,
 } from "../api";
+import { useAuth } from "../auth";
 import { Header } from "../components/Header";
+import { OperatorStatus } from "../components/OperatorStatus";
 import { usePageTransition } from "../pageTransition";
 import {
   DELIVERY_LABEL,
@@ -65,7 +67,7 @@ export function TopicDetailPage({ overlay = false }: { overlay?: boolean }) {
     setPending("sub");
     try {
       const st = await setSubscription(topic.id, !topic.subscribed);
-      setTopic({ ...topic, ...st });
+      setTopic((cur) => (cur ? { ...cur, ...st } : cur));
     } catch {
       /* 그대로 둔다 */
     } finally {
@@ -103,8 +105,12 @@ export function TopicDetailPage({ overlay = false }: { overlay?: boolean }) {
       {topic && (
         <DetailBody
           topic={topic}
+          onReload={async () => {
+            setTopic(await api<TopicDetail>(`/api/topics/${topic.id}`));
+            window.dispatchEvent(new Event(TOPICS_CHANGED));
+          }}
           onState={(st) => {
-            setTopic({ ...topic, ...st, counts: st.counts });
+            setTopic((cur) => (cur ? { ...cur, ...st, counts: st.counts } : cur));
             window.dispatchEvent(new Event(TOPICS_CHANGED));
           }}
         />
@@ -130,7 +136,17 @@ export function TopicDetailPage({ overlay = false }: { overlay?: boolean }) {
   );
 }
 
-function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: ParticipationState) => void }) {
+function DetailBody({
+  topic,
+  onState,
+  onReload,
+}: {
+  topic: TopicDetail;
+  onState: (s: ParticipationState) => void;
+  onReload: () => Promise<void>;
+}) {
+  const { user } = useAuth();
+  const operatorPanel = user?.role === "operator" && topic.type === "issue" && topic.status !== "done";
   const c = topic.counts;
   const [pending, setPending] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -233,8 +249,11 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
         </ul>
       </section>
 
+      {/* 운영자는 참여 버튼 대신 상태 변경 영역을 본다 (SRS 4.4) */}
+      {operatorPanel && <OperatorStatus topic={topic} onChanged={onReload} />}
+
       {/* 참여 버튼: 본인의 선택 여부를 버튼에 표시한다 (REQ-UI-12). 화면 아래에 고정. */}
-      {topic.status === "done" ? (
+      {operatorPanel ? null : topic.status === "done" ? (
         <div className="join-dock done">
           <div className="done-note">{DONE_MESSAGE[topic.result ?? ""] ?? "처리가 완료되었어요."}</div>
         </div>
