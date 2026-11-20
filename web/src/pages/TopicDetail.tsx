@@ -202,13 +202,13 @@ function DetailBody({ topic, onState }: { topic: TopicDetail; onState: (s: Parti
       <div className={`join-dock join-row ${topic.type}`}>
         {topic.type === "issue" ? (
           <>
-            <JoinPill label="✋ 나도 겪었어요" on={topic.my_participations.includes("experienced")}
+            <JoinPill label="나도 겪었어요" count={c.experienced} on={topic.my_participations.includes("experienced")}
               busy={pending !== null} onClick={() => void toggle("experienced")} />
-            <JoinPill label="👍 개선이 필요해요" on={topic.my_participations.includes("needs_improvement")}
+            <JoinPill label="개선이 필요해요" count={c.needs_improvement} on={topic.my_participations.includes("needs_improvement")}
               busy={pending !== null} onClick={() => void toggle("needs_improvement")} />
           </>
         ) : (
-          <JoinPill label="🙌 나도 원해요" on={topic.my_participations.includes("want")} proposal
+          <JoinPill label="나도 원해요" count={c.want} on={topic.my_participations.includes("want")} proposal
             busy={pending !== null} onClick={() => void toggle("want")} />
         )}
       </div>
@@ -249,7 +249,14 @@ const DONE_MESSAGE: Record<string, string> = {
   not_adopted: "제안이 채택되지 않았어요.",
 };
 
-function JoinPill(props: { label: string; on: boolean; busy: boolean; proposal?: boolean; onClick: () => void }) {
+function JoinPill(props: {
+  label: string;
+  count: number;
+  on: boolean;
+  busy: boolean;
+  proposal?: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       className={`join-pill ${props.proposal ? "proposal" : ""} ${props.on ? "on" : ""}`}
@@ -257,7 +264,7 @@ function JoinPill(props: { label: string; on: boolean; busy: boolean; proposal?:
       disabled={props.busy}
       onClick={props.onClick}
     >
-      {props.label}
+      {props.label} <strong>{props.count}</strong>
     </button>
   );
 }
