@@ -21,6 +21,8 @@ const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 const PHOTO_TYPES = ["image/jpeg", "image/png"];
 const SIMILAR_MIN_TEXT = 5;
 const SIMILAR_DEBOUNCE_MS = 500;
+// 글쓰기를 닫을 때의 효과 길이(ms). styles.css의 .page-zoom.leave와 맞춘다
+const WRITE_LEAVE_MS = 120;
 
 type Similar =
   | { state: "idle" }
@@ -70,7 +72,7 @@ export function WritePage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [similar, setSimilar] = useState<Similar>(draft?.similar ?? { state: "idle" });
   // 글쓰기: 가운데에서 퍼지며 열리고, 닫을 때는 가운데로 모이며 사라진다
-  const { phase, leave } = usePageTransition();
+  const { phase, leave } = usePageTransition(WRITE_LEAVE_MS);
 
   // 추천 후보 칸을 누르면 쓰던 글을 맡겨 두고 그 의제의 상세 화면으로 간다
   function openCandidate(topicId: number) {

@@ -13,7 +13,7 @@ function prefersReducedMotion(): boolean {
  * - 들어올 때: 새로 연 경우에만 (뒤로가기로 돌아온 경우는 효과 없이)
  * - 나갈 때: leave(fn)으로 효과를 보여준 뒤 fn(이동)을 실행
  */
-export function usePageTransition() {
+export function usePageTransition(leaveMs: number = PAGE_TRANSITION_MS) {
   const navType = useNavigationType();
   const [entering] = useState(() => navType !== "POP" && !prefersReducedMotion());
   const [leaving, setLeaving] = useState(false);
@@ -24,8 +24,8 @@ export function usePageTransition() {
   const leave = useCallback((go: () => void) => {
     if (prefersReducedMotion()) return go();
     setLeaving(true);
-    timer.current = setTimeout(go, PAGE_TRANSITION_MS);
-  }, []);
+    timer.current = setTimeout(go, leaveMs);
+  }, [leaveMs]);
 
   const phase = leaving ? "leave" : entering ? "enter" : "";
   return { phase, leave };
