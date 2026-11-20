@@ -166,7 +166,8 @@ p { margin: 0.25rem 0; }
 
 /* 하단 여백: 지도|목록 바(약 64px) + 글쓰기 버튼(56px)에 가리지 않도록 */
 .explore-body { flex: 1; display: flex; flex-direction: column; padding-bottom: 148px; }
-.map-box { position: relative; height: 44dvh; min-height: 260px; }
+/* 지도 내부 레이어(Leaflet z-index 400~1000)가 바깥 버튼 위로 올라오지 않게 가둔다 */
+.map-box { position: relative; height: 44dvh; min-height: 260px; isolation: isolate; }
 .map { width: 100%; height: 100%; }
 .map-error {
   position: absolute; inset: 12px 12px auto; z-index: 500; background: #fff; border-radius: 10px;
@@ -309,7 +310,8 @@ p { margin: 0.25rem 0; }
 
 /* ---------- 글쓰기 버튼 (지도|목록 위 오른쪽 아래, 스크롤 중에는 내려감) ---------- */
 .fab-write {
-  position: fixed; z-index: 1001;
+  /* 지도|목록 바(z-index 1000)보다 아래 레이어: 내려갈 때 바 뒤로 숨는다 */
+  position: fixed; z-index: 999;
   right: max(16px, calc((100vw - var(--shell)) / 2 + 16px));
   bottom: calc(76px + env(safe-area-inset-bottom));
   width: 56px; height: 56px; border-radius: 50%;
@@ -318,4 +320,4 @@ p { margin: 0.25rem 0; }
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
   transition: transform 0.25s ease, opacity 0.25s ease;
 }
-.fab-write.hidden { transform: translateY(96px); opacity: 0; pointer-events: none; }
+.fab-write.hidden { transform: translateY(96px); pointer-events: none; }
