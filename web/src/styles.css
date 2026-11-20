@@ -107,7 +107,9 @@ p { margin: 0.25rem 0; }
   background: var(--brand);
   color: var(--brand-ink);
 }
-.topbar-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.01em; }
+/* 로고 글씨 'CrowdFix' 전용 글씨체 */
+.wordmark { font-family: "Outfit", var(--font-fallback, system-ui), sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+.topbar-brand { display: inline-flex; align-items: center; gap: 8px; font-size: 1.2rem; }
 .topbar-icon { width: 28px; height: 28px; border-radius: 7px; display: block; }
 .topbar-right { display: flex; align-items: center; gap: 10px; }
 .topbar .link-btn { color: #cfe0f2; font-size: 0.78rem; }

@@ -18,7 +18,7 @@ export function Header() {
     <header className="topbar">
       <Link to="/" className="topbar-brand">
         <img src="/icon-192.png" alt="" className="topbar-icon" />
-        CrowdFix
+        <span className="wordmark">CrowdFix</span>
       </Link>
       <div className="topbar-right">
         {user?.role === "operator" && <span className="chip operator">운영자</span>}

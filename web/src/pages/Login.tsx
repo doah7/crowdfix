@@ -49,7 +49,7 @@ export function Login() {
     <div className="app-shell login">
       <div className="login-hero">
         <img className="brand-mark" src="/icon-192.png" alt="" />
-        <h1>CrowdFix</h1>
+        <h1 className="wordmark">CrowdFix</h1>
         <p>캠퍼스의 불편과 제안을 한곳에 모으고, 함께 모인 목소리를 담당 부서에 전달해요.</p>
       </div>
 
