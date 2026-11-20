@@ -561,3 +561,31 @@ p { margin: 0.25rem 0; }
 .page-zoom.leave { animation: write-close 0.12s ease-in both; }
 .app-shell.write { overflow: clip; }
 @media (prefers-reduced-motion: reduce) { .page-zoom.enter, .page-zoom.leave { animation: none; } }
+
+/* ---------- 운영자 처리 (Increment 5) ---------- */
+.operator-panel { border: 1px solid var(--brand); border-radius: 14px; padding: 14px; background: var(--brand-soft); }
+.detail-body > section.operator-panel { border-top: 1px solid var(--brand); padding-top: 14px; }
+.operator-panel select,
+.operator-panel textarea {
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: #fff; font-weight: 400;
+}
+.operator-panel textarea { min-height: 72px; line-height: 1.5; resize: vertical; }
+.operator-panel textarea:focus, .operator-panel select:focus { outline: none; border-color: var(--brand); }
+
+/* ---------- 알림함 (Increment 5) ---------- */
+.topbar .bell { color: inherit; }
+.inbox-body { padding: 10px 16px 40px; display: flex; flex-direction: column; gap: 10px; }
+.inbox-title { font-size: 1.15rem; margin: 4px 0 4px; }
+.notice {
+  display: flex; gap: 10px; align-items: flex-start; text-align: left; width: 100%;
+  background: var(--surface); border: 1px solid #e6e8eb; border-radius: 14px; padding: 12px 14px; cursor: pointer;
+}
+.notice.unread { border-color: var(--brand); background: var(--brand-soft); }
+.notice-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; background: transparent; }
+.notice.unread .notice-dot { background: var(--brand); }
+.notice-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.notice-topic { font-weight: 800; font-size: 0.92rem; }
+.notice-summary { font-size: 0.88rem; line-height: 1.45; }
+.notice-tag { align-self: flex-start; border-radius: 999px; padding: 2px 8px; font-size: 0.72rem; font-weight: 800; }
+.notice-tag.result_published { background: var(--done-soft); color: var(--done); }
+.notice-tag.status_changed { background: #e6ecfb; color: #3b63d9; }

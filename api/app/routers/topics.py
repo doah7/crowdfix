@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from .. import models as m
-from ..auth import current_user
+from ..auth import current_user, operator_user
 from ..db import get_db
 from ..delivery import send_reserved
 from ..schemas import Counts, HistoryOut, PhotoOut, ReportOut, TopicDetail, TopicSummary
@@ -200,3 +200,58 @@ def unsubscribe(topic_id: int, db: Session = Depends(get_db), user: m.User = Dep
     db.commit()
     return _state(db, topic, user)
 
+
+# ---------- 운영자 상태 변경 (SRS 4.4, FR-STAT-02~05) ----------
+
+# 데모 범위: 검토 대기 → 진행 중 → 완료됨 순서로만 바꾼다
+TRANSITIONS = {("backlog", "in_progress"), ("in_progress", "done")}
+
+
+class StatusChange(BaseModel):
+    status: Literal["in_progress", "done"]
+    reason: str = ""
+    result: Literal["resolved", "closed_unresolved"] | None = None
+
+
+class StatusChanged(BaseModel):
+    status: str
+    notified: int
+
+
+@router.patch("/{topic_id}/status", response_model=StatusChanged)
+def change_status(
+    topic_id: int, change: StatusChange, db: Session = Depends(get_db), user: m.User = Depends(operator_user)
+):
+    """운영자만 상태를 바꾼다. 이력을 남기고 활성 구독자에게 알림을 만든다 (FR-NOTI-03)."""
+    topic = _topic_or_404(db, topic_id, lock=True)
+    previous = topic.status
+    if topic.type != "issue" or (previous, change.status) not in TRANSITIONS:
+        raise HTTPException(status.HTTP_409_CONFLICT, detail={"type": "invalid_transition"})
+    reason = change.reason.strip()
+    if len(reason) > 500:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail={"type": "validation", "fields": {"reason": "사유는 500자까지 적을 수 있어요."}})
+    if change.status == "done" and not (change.result and reason):
+        # 완료 처리에는 결과와 처리 내용이 필요하다 (FR-STAT-04)
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail={"type": "validation", "fields": {"reason": "처리 결과와 내용을 입력해 주세요."}})
+
+    topic.status = change.status
+    if change.status == "done":
+        topic.result = change.result
+        topic.result_reason = reason
+    db.add(m.StatusHistory(topic_id=topic.id, from_status=previous, to_status=topic.status,
+                           actor_id=user.id, actor_role=user.role, reason=reason or None,
+                           result=topic.result if change.status == "done" else None))
+
+    if change.status == "done":
+        event, summary = "result_published", f"처리 결과가 공개됐어요: {reason}"
+    else:
+        event, summary = "status_changed", "담당자가 처리를 시작했어요." + (f" ({reason})" if reason else "")
+    subscribers = db.scalars(
+        select(m.Subscription.user_id).where(m.Subscription.topic_id == topic.id, m.Subscription.active.is_(True))
+    ).all()
+    for uid in subscribers:
+        db.add(m.Notification(user_id=uid, topic_id=topic.id, event=event, summary=summary))
+    db.commit()
+    return StatusChanged(status=topic.status, notified=len(subscribers))
