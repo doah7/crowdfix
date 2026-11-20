@@ -225,7 +225,7 @@ p { margin: 0.25rem 0; }
   width: 100%; max-width: var(--shell); z-index: 1000;
   display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
   padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-  background: var(--surface); border-top: 1px solid var(--line);
+  background: var(--surface); box-shadow: 0 -10px 16px -8px rgba(0, 0, 0, 0.12);
 }
 .bottom-nav button {
   border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 10px; font-weight: 700; cursor: pointer;
