@@ -29,7 +29,7 @@
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
 body { margin: 0; background: #dfe3dd; }
-button, input, select { font: inherit; color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
 a { color: inherit; text-decoration: none; }
 h1, h2 { margin: 0; }
 h1 { font-size: 1.35rem; line-height: 1.35; }
@@ -469,3 +469,7 @@ p { margin: 0.25rem 0; }
 @media (prefers-reduced-motion: reduce) {
   .write .similar-box.found, .write .similar-item, .similar-box.searching, .search-dots i { animation: none; }
 }
+
+.write .similar-item { cursor: pointer; transition: border-color 0.15s ease; }
+.write .similar-item:hover { border-color: var(--brand); }
+.write .similar-item:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }

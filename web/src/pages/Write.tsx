@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useNavigationType, useSearchParams } from "react-router-dom";
 import {
   ApiError,
   FieldErrors,
@@ -27,24 +27,53 @@ type Similar =
   | { state: "failed" }
   | { state: "done"; candidates: SimilarCandidate[] };
 
+/**
+ * 추천된 의제를 열어 보러 상세 화면에 다녀올 때 쓰던 글을 잠시 맡겨 두는 곳.
+ * 사진(File)까지 그대로 두려고 메모리에 둔다. 뒤로가기로 돌아왔을 때만 꺼내 쓴다.
+ */
+interface Draft {
+  buildingId: number | null;
+  floor: string;
+  title: string;
+  body: string;
+  photos: File[];
+  requestId: string;
+  similar: Similar;
+}
+let parkedDraft: Draft | null = null;
+
 /** Report 작성 (SRS 3.1.6, 4.2). 데모 범위에서 등록은 Issue만 다룬다. */
 export function WritePage() {
   const navigate = useNavigate();
+  const navType = useNavigationType();
   const [params] = useSearchParams();
+  // 상세 화면에서 뒤로가기로 돌아온 경우에만 맡겨 둔 글을 되살린다
+  const [draft] = useState<Draft | null>(() => (navType === "POP" ? parkedDraft : null));
+  useEffect(() => {
+    parkedDraft = null; // 한 번 되살렸으면 비운다
+  }, []);
   const [buildings, setBuildings] = useState<Building[]>([]);
-  const [buildingId, setBuildingId] = useState<number | null>(params.get("b") ? Number(params.get("b")) : null);
-  const [floor, setFloor] = useState("");
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [photos, setPhotos] = useState<File[]>([]);
+  const [buildingId, setBuildingId] = useState<number | null>(
+    draft ? draft.buildingId : params.get("b") ? Number(params.get("b")) : null,
+  );
+  const [floor, setFloor] = useState(draft?.floor ?? "");
+  const [title, setTitle] = useState(draft?.title ?? "");
+  const [body, setBody] = useState(draft?.body ?? "");
+  const [photos, setPhotos] = useState<File[]>(draft?.photos ?? []);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   // 한 번 작성한 글은 다시 보내도 같은 요청으로 처리된다 (REQ-REG-12)
-  const requestId = useRef(newRequestId());
+  const requestId = useRef(draft?.requestId ?? newRequestId());
   const fileInput = useRef<HTMLInputElement>(null);
-  const [similar, setSimilar] = useState<Similar>({ state: "idle" });
+  const [similar, setSimilar] = useState<Similar>(draft?.similar ?? { state: "idle" });
+
+  // 추천 후보 칸을 누르면 쓰던 글을 맡겨 두고 그 의제의 상세 화면으로 간다
+  function openCandidate(topicId: number) {
+    parkedDraft = { buildingId, floor, title, body, photos, requestId: requestId.current, similar };
+    navigate(`/topics/${topicId}`);
+  }
   const [retryKey, setRetryKey] = useState(0);
 
   // 본문을 입력하는 동안 비슷한 의제를 찾는다. 등록 버튼을 누르기 전에 보여준다 (데모 문서 5장).
@@ -196,6 +225,7 @@ export function WritePage() {
           similar={similar}
           busy={busy}
           onJoin={(id) => void submit(id)}
+          onOpen={openCandidate}
           onRetry={() => setRetryKey((k) => k + 1)}
         />
         {errors.target_topic_id && <div className="field-error">{errors.target_topic_id}</div>}
@@ -261,11 +291,13 @@ function SimilarPanel({
   similar,
   busy,
   onJoin,
+  onOpen,
   onRetry,
 }: {
   similar: Similar;
   busy: boolean;
   onJoin: (topicId: number) => void;
+  onOpen: (topicId: number) => void;
   onRetry: () => void;
 }) {
   if (similar.state === "idle") return null;
@@ -306,7 +338,18 @@ function SimilarPanel({
         {similar.candidates.map((c, i) => {
           const t = c.topic;
           return (
-            <li key={t.id} className="similar-item" style={{ animationDelay: `${120 + i * 90}ms` }}>
+            <li
+              key={t.id}
+              className="similar-item"
+              style={{ animationDelay: `${120 + i * 90}ms` }}
+              role="link"
+              tabIndex={0}
+              title="의제 상세 보기"
+              onClick={() => onOpen(t.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onOpen(t.id);
+              }}
+            >
               <div className="row gap wrap">
                 <span className={`chip type-${t.type}`}>Issue</span>
                 <span className={`chip relation-${c.relation}`}>
@@ -323,9 +366,12 @@ function SimilarPanel({
                 type="button"
                 className="pill join-topic"
                 disabled={busy}
-                onClick={() => onJoin(t.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onJoin(t.id);
+                }}
               >
-                이 의제에 참여
+                이 의제에 리포트 통합하기
               </button>
             </li>
           );
