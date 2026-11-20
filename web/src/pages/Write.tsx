@@ -309,7 +309,7 @@ function SimilarPanel({
               <div className="similar-title">{t.title}</div>
               <div className="muted small">{placeLabel(t)}</div>
               <div className="small">
-                경험자 {t.counts.experienced}명 · 개선 공감 {t.counts.needs_improvement}명 · 연결된 Report {t.report_count}건
+                경험 {t.counts.experienced}명 | 공감 {t.counts.needs_improvement}명 | Report {t.report_count}건
               </div>
               <div className="muted small">일치: {c.matched.join(", ")}</div>
               <button

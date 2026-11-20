@@ -37,6 +37,7 @@ ORG_ROUTES = [
     ("wifi", "정보통신처", "ict@demo.local"),
     ("power", "시설관리팀", "facility@demo.local"),
     ("hvac", "시설관리팀", "facility@demo.local"),
+    ("classroom", "학사지원팀", "academic@demo.local"),
     ("academic", "학사지원팀", "academic@demo.local"),
     ("event", "학생지원팀", "student-affairs@demo.local"),
 ]
@@ -131,6 +132,23 @@ SEED_TOPICS = [
             "needs_improvement": ["seed07", "seed03"],
         },
         "history": [("backlog", "in_progress", "시설관리팀 점검 일정 조율 중", None, ago(days=3))],
+    },
+    {
+        # 위치가 있는 Proposal 예시. 같은 건물(26동)에 두어 지도 마커는 3곳 그대로다.
+        "type": "proposal",
+        "build_no": "226",
+        "floor": "3F",
+        "category": "classroom",
+        "title": "26동 강의실 칠판을 전자칠판으로 바꿔 주세요",
+        "summary": "제2공학관26동 3층 강의실의 분필 칠판을 전자칠판으로 교체해 달라는 제안",
+        "status": "backlog",
+        "delivery_status": "sent",
+        "created": ago(days=8),
+        "reports": [
+            ("seed07", "전자칠판 교체 제안", "26동 3층 강의실은 아직 분필 칠판이라 뒷자리에서 잘 안 보여요. 다른 건물처럼 전자칠판으로 바꿔 주세요.", ago(days=8)),
+        ],
+        "participations": {"want": ["seed01", "seed03", "seed05", "seed07", "seed08", "seed09", "seed10"]},
+        "history": [],
     },
     {
         "type": "proposal",

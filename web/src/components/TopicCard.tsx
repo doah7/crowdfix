@@ -16,11 +16,12 @@ export function TopicCard({ topic }: { topic: TopicSummary }) {
       <div className="topic-card-stats small">
         {topic.type === "issue" ? (
           <>
-            <span>경험자 {c.experienced}명</span>
-            <span>개선 공감 {c.needs_improvement}명</span>
+            <span>경험 {c.experienced}명</span>
+            <span className="stat-sep" aria-hidden>|</span>
+            <span>공감 {c.needs_improvement}명</span>
           </>
         ) : (
-          <span>제안 지지 {c.want}명</span>
+          <span>지지 {c.want}명</span>
         )}
         <span className="muted recent">최근 Report {timeAgo(topic.last_report_at)}</span>
       </div>

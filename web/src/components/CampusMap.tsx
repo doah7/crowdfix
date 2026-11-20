@@ -33,7 +33,8 @@ export function groupByBuilding(topics: TopicSummary[]): MarkerGroup[] {
 
 function markerIcon(g: MarkerGroup, selected: boolean) {
   const people = g.topics.reduce((s, t) => s + t.counts.unique, 0);
-  const hasProposal = g.topics.some((t) => t.type === "proposal");
+  // 건물의 의제가 모두 Proposal일 때만 Proposal 모양으로 표시한다
+  const hasProposal = g.topics.every((t) => t.type === "proposal");
   const html = `
     <div class="marker ${selected ? "selected" : ""} ${hasProposal ? "proposal" : "issue"}">
       <span class="marker-count">${g.topics.length}</span>
