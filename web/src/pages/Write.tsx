@@ -142,13 +142,15 @@ export function WritePage() {
   return (
     <div className="app-shell write">
       <Header />
-      <div className="detail-nav divider">
-        <button className="link-btn" onClick={() => navigate(-1)}>
+      <div className="detail-bar divider">
+        <button className="detail-back" onClick={() => navigate(-1)}>
           ← 취소
         </button>
       </div>
 
       <form className="write-body" onSubmit={onSubmit} noValidate>
+        <span className="kind-pill issue">ISSUE{building ? ` · ${building.name_ko}` : ""}</span>
+
         <div className="field">
           <span className="field-label">장소 *</span>
           <BuildingSearch
@@ -243,7 +245,7 @@ export function WritePage() {
 
         {formError && <div className="banner warn">{formError}</div>}
 
-        <button className="btn primary block" disabled={busy}>
+        <button className="submit-pill" disabled={busy}>
           {busy ? "등록하는 중…" : candidates.length > 0 ? "새 의제로 등록" : "등록하기"}
         </button>
       </form>
@@ -314,7 +316,7 @@ function SimilarPanel({
               <div className="muted small">일치: {c.matched.join(", ")}</div>
               <button
                 type="button"
-                className="btn primary small join-topic"
+                className="pill join-topic"
                 disabled={busy}
                 onClick={() => onJoin(t.id)}
               >

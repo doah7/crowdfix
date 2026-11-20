@@ -62,7 +62,7 @@ export function TopicDetailPage() {
       <Header />
       <div className="detail-bar">
         <button className="detail-back" onClick={back}>
-          ← 의제 상세
+          ← 뒤로가기
         </button>
         {topic && (
           <button

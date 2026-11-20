@@ -31,17 +31,33 @@ export function groupByBuilding(topics: TopicSummary[]): MarkerGroup[] {
   return [...map.values()];
 }
 
+const ISSUE = "#ee6a4b";
+const PROPOSAL = "#4f6bed";
+
+function pinSvg(color: string, cls: string) {
+  return `<svg class="pin ${cls}" viewBox="0 0 32 42" aria-hidden="true">
+    <path d="M16 1C7.7 1 1 7.6 1 15.8 1 27 16 41 16 41s15-14 15-25.2C31 7.6 24.3 1 16 1z" fill="${color}"/>
+    <circle cx="16" cy="34" r="2.3" fill="#fff"/></svg>`;
+}
+
+/**
+ * 건물 마커: 핀 안에 의제 수, 오른쪽 위 배지에 고유 참여 인원 합계 (FR-NAV-02).
+ * Issue는 주황, Proposal은 파랑. 한 건물에 둘 다 있으면 파랑 핀을 뒤에 겹쳐 보여준다 (FR-NAV-01).
+ */
 function markerIcon(g: MarkerGroup, selected: boolean) {
   const people = g.topics.reduce((s, t) => s + t.counts.unique, 0);
-  // 건물의 의제가 모두 Proposal일 때만 Proposal 모양으로 표시한다
-  const hasProposal = g.topics.every((t) => t.type === "proposal");
+  const hasIssue = g.topics.some((t) => t.type === "issue");
+  const hasProposal = g.topics.some((t) => t.type === "proposal");
+  const back = hasIssue && hasProposal ? pinSvg(PROPOSAL, "back") : "";
+  const front = pinSvg(hasIssue ? ISSUE : PROPOSAL, "front");
   const html = `
-    <div class="marker ${selected ? "selected" : ""} ${hasProposal ? "proposal" : "issue"}">
-      <span class="marker-count">${g.topics.length}</span>
-      <span class="marker-people">${people}명</span>
-    </div>
-    <div class="marker-label">${g.name}</div>`;
-  return L.divIcon({ html, className: "marker-wrap", iconSize: [64, 52], iconAnchor: [32, 26] });
+    <div class="pin-stack ${selected ? "selected" : ""}">
+      ${back}${front}
+      <span class="pin-count">${g.topics.length}</span>
+      <span class="pin-badge">${people}</span>
+    </div>`;
+  // 앞 핀의 뾰족한 끝이 건물 좌표를 가리킨다
+  return L.divIcon({ html, className: "marker-wrap", iconSize: [56, 54], iconAnchor: [26, 51] });
 }
 
 /** 처음 열 때 의제가 있는 건물이 모두 보이도록 화면을 맞춘다. */
