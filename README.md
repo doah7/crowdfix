@@ -1,6 +1,6 @@
-# CrowdFix — 최종 발표 데모
+# CrowdFix Demo
 
-성균관대 캠퍼스 의견 수집·전달 플랫폼 **CrowdFix** 시연용 웹앱 (Team 13 · 소프트웨어공학)
+A campus feedback platform for SKKU students: **CrowdFix** demo web app (Introduction to Software Engineering, Team 13)
 
 ## 실행
 
